@@ -1,32 +1,34 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { CommandSearch } from "@/components/command-search";
 import type { SearchResult } from "@/adapters/sourceManager";
 import { SearchResultCard } from "@/components/search-result-card";
 import { LoaderCircle } from "lucide-react";
-import { getBooks } from "@/lib/mock-data";
-import { BookCard } from "@/components/book-card";
-import { Button } from "@/components/ui/button";
+import { fetchGutenbergBooks } from "@/adapters/gutendex";
 
 export default function HomePage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedGenre, setSelectedGenre] = useState<string | null>('All');
+  const [featuredBooks, setFeaturedBooks] = useState<SearchResult[]>([]);
+  const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
 
-  const allBooks = useMemo(() => getBooks(), []);
-  const genres = useMemo(() => {
-    const allGenres = allBooks.map(book => book.genre);
-    return ['All', ...Array.from(new Set(allGenres))];
-  }, [allBooks]);
-
-  const filteredBooks = useMemo(() => {
-    if (!selectedGenre || selectedGenre === 'All') {
-      return allBooks;
+  useEffect(() => {
+    async function loadFeaturedBooks() {
+      setIsFeaturedLoading(true);
+      try {
+        const books = await fetchGutenbergBooks();
+        setFeaturedBooks(books);
+      } catch (error) {
+        console.error("Failed to load featured books:", error);
+        setFeaturedBooks([]);
+      } finally {
+        setIsFeaturedLoading(false);
+      }
     }
-    return allBooks.filter(book => book.genre === selectedGenre);
-  }, [allBooks, selectedGenre]);
+    loadFeaturedBooks();
+  }, []);
 
 
   const renderContent = () => {
@@ -56,27 +58,21 @@ export default function HomePage() {
     
     return (
         <section>
-            <div className="flex flex-wrap gap-2 mb-6 border-b border-dashed border-border pb-4">
-                {genres.map(genre => (
-                    <Button
-                        key={genre}
-                        variant={selectedGenre === genre ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setSelectedGenre(genre)}
-                        className="border-accent/50"
-                    >
-                        {genre}
-                    </Button>
-                ))}
-            </div>
              <h2 className="font-headline text-lg text-accent/80 mb-4">
-                // FEATURED_LOGS
+                // FEATURED_LOGS from Project Gutenberg
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {filteredBooks.map((book) => (
-                    <BookCard key={book.id} book={book} />
-                ))}
-            </div>
+            {isFeaturedLoading ? (
+               <div className="flex justify-center items-center p-8">
+                <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
+                <p className="ml-4 text-muted-foreground">Loading recommendations...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {featuredBooks.map((book, index) => (
+                      <SearchResultCard key={`${book.source}-${book.id}-${index}`} book={book} />
+                  ))}
+              </div>
+            )}
         </section>
     )
   }
