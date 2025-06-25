@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, ChevronLeft, ChevronRight, LoaderCircle, Menu, Settings, AlertTriangle } from 'lucide-react';
+import { Bookmark, ChevronLeft, ChevronRight, LoaderCircle, Settings, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useReaderSettings } from '@/context/reader-settings-provider';
 
 function PagedContent({ content }: { content: string }) {
@@ -43,6 +43,7 @@ function PagedContent({ content }: { content: string }) {
 
 function Reader() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,13 +149,15 @@ function Reader() {
     <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in">
       <div className="flex-1 flex flex-col">
         <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="md:hidden"><Menu className="h-4 w-4" /></Button>
-            <span>{`TRANSMISSION > ${source} > ID_${id}`}</span>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <span className="truncate">{`TRANSMISSION > ${source} > ID_${id}`}</span>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon"><Bookmark className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon"><Settings className="h-4 w-4" /></Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" aria-label="Bookmark"><Bookmark className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" aria-label="Settings"><Settings className="h-4 w-4" /></Button>
           </div>
         </header>
 
@@ -165,14 +168,6 @@ function Reader() {
           </div>
           {renderContent()}
         </main>
-
-        <footer className="p-2 border-t border-border/50">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <Button variant="ghost" size="icon"><ChevronLeft className="h-4 w-4" /></Button>
-            <div className="text-center text-xs text-muted-foreground/50 mt-1">Memory Stream Active...</div>
-            <Button variant="ghost" size="icon"><ChevronRight className="h-4 w-4" /></Button>
-          </div>
-        </footer>
       </div>
     </div>
   );
