@@ -1,15 +1,33 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { CommandSearch } from "@/components/command-search";
 import type { SearchResult } from "@/adapters/sourceManager";
 import { SearchResultCard } from "@/components/search-result-card";
 import { LoaderCircle } from "lucide-react";
+import { getBooks } from "@/lib/mock-data";
+import { BookCard } from "@/components/book-card";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedGenre, setSelectedGenre] = useState<string | null>('All');
+
+  const allBooks = useMemo(() => getBooks(), []);
+  const genres = useMemo(() => {
+    const allGenres = allBooks.map(book => book.genre);
+    return ['All', ...Array.from(new Set(allGenres))];
+  }, [allBooks]);
+
+  const filteredBooks = useMemo(() => {
+    if (!selectedGenre || selectedGenre === 'All') {
+      return allBooks;
+    }
+    return allBooks.filter(book => book.genre === selectedGenre);
+  }, [allBooks, selectedGenre]);
+
 
   const renderContent = () => {
     if (isLoading) {
@@ -37,12 +55,29 @@ export default function HomePage() {
     }
     
     return (
-        <div className="flex flex-col items-center justify-center text-center p-8 mt-10">
-          <h2 className="font-headline text-lg text-accent/80">// STANDBY</h2>
-          <p className="text-muted-foreground mt-2 max-w-md">
-            Use the search bar to query the public domain archives.
-          </p>
-        </div>
+        <section>
+            <div className="flex flex-wrap gap-2 mb-6 border-b border-dashed border-border pb-4">
+                {genres.map(genre => (
+                    <Button
+                        key={genre}
+                        variant={selectedGenre === genre ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedGenre(genre)}
+                        className="border-accent/50"
+                    >
+                        {genre}
+                    </Button>
+                ))}
+            </div>
+             <h2 className="font-headline text-lg text-accent/80 mb-4">
+                // FEATURED_LOGS
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {filteredBooks.map((book) => (
+                    <BookCard key={book.id} book={book} />
+                ))}
+            </div>
+        </section>
     )
   }
 
