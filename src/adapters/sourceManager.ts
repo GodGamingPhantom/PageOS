@@ -7,8 +7,10 @@ import * as openLibrary from './openLibrary';
 import type { MappedOpenLibraryBook } from './openLibrary';
 import * as wikisource from './wikisource';
 import type { MappedWikisourceBook } from './wikisource';
+import * as manybooks from './manybooks';
+import type { MappedManybooksBook } from './manybooks';
 
-export type SearchResult = MappedGutenbergBook | MappedStandardEbook | MappedOpenLibraryBook | MappedWikisourceBook;
+export type SearchResult = MappedGutenbergBook | MappedStandardEbook | MappedOpenLibraryBook | MappedWikisourceBook | MappedManybooksBook;
 
 export async function searchBooksAcrossSources(query: string): Promise<SearchResult[]> {
   if (!query) return [];
@@ -18,6 +20,7 @@ export async function searchBooksAcrossSources(query: string): Promise<SearchRes
     standardEbooks.fetchStandardEbooks(query).catch(e => { console.error("Standard Ebooks search failed:", e); return []; }),
     openLibrary.fetchOpenLibrary(query).catch(e => { console.error("Open Library search failed:", e); return []; }),
     wikisource.fetchWikisource(query).catch(e => { console.error("Wikisource search failed:", e); return []; }),
+    manybooks.fetchManyBooks(query).catch(e => { console.error("ManyBooks search failed:", e); return []; }),
   ];
 
   const results = await Promise.all(promises);
@@ -35,6 +38,8 @@ export async function fetchBookContent(book: SearchResult): Promise<string | Blo
       return await openLibrary.fetchOpenLibraryContent(book.edition);
     case 'wikisource': 
       return await wikisource.fetchWikisourceContent(book.pageid);
+    case 'manybooks':
+      return await manybooks.fetchManybooksContent(book.id);
     default: 
       const _exhaustiveCheck: never = book;
       throw new Error('Unknown source');

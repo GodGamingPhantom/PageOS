@@ -43,6 +43,7 @@ export default function SettingsPage() {
     'Standard Ebooks': 'Checking',
     'Open Library': 'Checking',
     'Wikisource': 'Checking',
+    'ManyBooks': 'Checking',
   });
 
   const [newSourceUrl, setNewSourceUrl] = useState('');
@@ -54,6 +55,7 @@ export default function SettingsPage() {
       'Standard Ebooks': 'Checking',
       'Open Library': 'Checking',
       'Wikisource': 'Checking',
+      'ManyBooks': 'Checking',
     });
 
     const check = async (url: string): Promise<Status> => {
@@ -70,6 +72,7 @@ export default function SettingsPage() {
       'Standard Ebooks': await check('/api/standard-ebooks?query=a'),
       'Open Library': await check('https://openlibrary.org/search.json?q=a&limit=1'),
       'Wikisource': await check('https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=a&format=json&origin=*'),
+      'ManyBooks': await check('/api/manybooks?search=a'),
     });
   }, []);
 

@@ -29,12 +29,20 @@ function createBookQuery(book: SearchResult): string {
     case "wikisource":
       params.set("pageid", String(book.pageid));
       break;
+    case "manybooks":
+      if (book.cover) {
+          params.set("cover", book.cover);
+      }
+      break;
   }
   return params.toString();
 }
 
 const getCoverUrl = (book: SearchResult) => {
     if (book.source === 'openLibrary' && book.cover) {
+        return book.cover;
+    }
+    if (book.source === 'manybooks' && book.cover) {
         return book.cover;
     }
     return "https://placehold.co/600x800";
@@ -44,6 +52,7 @@ export function SearchResultCard({ book }: { book: SearchResult }) {
   const getFileExtension = (source: string) => {
     if (source === "standardEbooks") return "epub";
     if (source === "wikisource") return "wiki";
+    if (source === "manybooks") return "web";
     return "txt";
   };
 
