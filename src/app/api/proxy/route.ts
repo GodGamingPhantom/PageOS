@@ -5,6 +5,7 @@ const ALLOWED_DOMAINS = [
   'standardebooks.org',
   'openlibrary.org',
   'en.wikisource.org',
+  'gutendex.com',
 ];
 
 export async function GET(request: NextRequest) {

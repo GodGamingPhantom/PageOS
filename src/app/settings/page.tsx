@@ -50,13 +50,7 @@ export default function SettingsPage() {
   const [isImporting, setIsImporting] = useState(false);
 
   const checkSourceStatuses = useCallback(async () => {
-    setSourceStatuses({
-      'Project Gutenberg': 'Checking',
-      'Standard Ebooks': 'Checking',
-      'Open Library': 'Checking',
-      'Wikisource': 'Checking',
-      'ManyBooks': 'Checking',
-    });
+    setSourceStatuses(prev => Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: 'Checking' }), {}));
 
     const check = async (url: string): Promise<Status> => {
       try {
@@ -66,14 +60,19 @@ export default function SettingsPage() {
         return 'Error';
       }
     };
+    
+    const checkViaProxy = (targetUrl: string) => check(`/api/proxy?url=${encodeURIComponent(targetUrl)}`);
 
-    setSourceStatuses({
-      'Project Gutenberg': await check('https://gutendex.com/books/?search=a'),
-      'Standard Ebooks': await check('/api/standard-ebooks?query=a'),
-      'Open Library': await check('https://openlibrary.org/search.json?q=a&limit=1'),
-      'Wikisource': await check('https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=a&format=json&origin=*'),
+    const statuses = {
+      'Project Gutenberg': await checkViaProxy('https://gutendex.com/books/?search=a'),
+      'Standard Ebooks': await checkViaProxy('https://standardebooks.org/api/v1/ebooks/?title__icontains=a'),
+      'Open Library': await checkViaProxy('https://openlibrary.org/search.json?q=a&limit=1'),
+      'Wikisource': await checkViaProxy('https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=a&format=json&origin=*'),
       'ManyBooks': await check('/api/manybooks?search=a'),
-    });
+    };
+    
+    setSourceStatuses(statuses);
+
   }, []);
 
   useEffect(() => {

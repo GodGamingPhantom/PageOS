@@ -20,7 +20,8 @@ export type MappedGutenbergBook = {
 
 export async function fetchGutenbergBooks(query: string, page = 1): Promise<MappedGutenbergBook[]> {
   if (!query) return [];
-  const res = await fetch(`https://gutendex.com/books?search=${encodeURIComponent(query)}&page=${page}`);
+  const apiUrl = `https://gutendex.com/books?search=${encodeURIComponent(query)}&page=${page}`;
+  const res = await fetch(`/api/proxy?url=${encodeURIComponent(apiUrl)}`);
   if (!res.ok) {
     console.error('Failed to fetch from Gutendex:', res.statusText);
     return [];
