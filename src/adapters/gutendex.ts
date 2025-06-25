@@ -37,10 +37,15 @@ export async function fetchGutenbergBooks(query: string, page = 1): Promise<Mapp
 }
 
 export async function fetchGutenbergBookContent(formats: Record<string, string>): Promise<string | Blob> {
-  const plainTextKey = Object.keys(formats).find(key => key.startsWith('text/plain'));
-  const plainTextUrl = plainTextKey ? formats[plainTextKey] : undefined;
+  const formatEntries = Object.entries(formats);
 
-  if (plainTextUrl) {
+  // Find a plain text URL that is NOT a zip file.
+  const plainTextEntry = formatEntries.find(([key, url]) => 
+    key.startsWith('text/plain') && !url.endsWith('.zip')
+  );
+
+  if (plainTextEntry) {
+    const plainTextUrl = plainTextEntry[1];
     const res = await fetch(`/api/proxy?url=${encodeURIComponent(plainTextUrl)}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch book content from ${plainTextUrl}`);
