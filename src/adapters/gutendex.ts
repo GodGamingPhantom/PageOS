@@ -37,7 +37,8 @@ export async function fetchGutenbergBooks(query: string, page = 1): Promise<Mapp
 }
 
 export async function fetchGutenbergBookContent(formats: Record<string, string>): Promise<string | Blob> {
-  const plainTextUrl = formats['text/plain; charset=utf-8'] || formats['text/plain'];
+  const plainTextKey = Object.keys(formats).find(key => key.startsWith('text/plain'));
+  const plainTextUrl = plainTextKey ? formats[plainTextKey] : undefined;
 
   if (plainTextUrl) {
     const res = await fetch(`/api/proxy?url=${encodeURIComponent(plainTextUrl)}`);
