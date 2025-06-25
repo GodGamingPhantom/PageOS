@@ -20,13 +20,19 @@ export type MappedStandardEbook = {
 
 export async function fetchStandardEbooks(query: string): Promise<MappedStandardEbook[]> {
   if (!query) return [];
-  const res = await fetch(`https://standardebooks.org/api/v1/ebooks/?title__icontains=${encodeURIComponent(query)}`);
+  // Use the local API proxy to bypass CORS issues
+  const res = await fetch(`/api/standard-ebooks?query=${encodeURIComponent(query)}`);
   if (!res.ok) {
-    console.error('Failed to fetch from Standard Ebooks:', res.statusText);
+    console.error('Failed to fetch from Standard Ebooks proxy:', res.statusText);
     return [];
   }
   
   const data: StandardEbooksAPIResponse = await res.json();
+
+  if (!data.results) {
+    console.error('Invalid response from Standard Ebooks proxy:', data);
+    return [];
+  }
   
   return data.results.map(book => ({
     id: book.url,
