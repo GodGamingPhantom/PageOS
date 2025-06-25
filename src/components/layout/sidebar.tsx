@@ -20,8 +20,8 @@ import {
 import { Button } from "../ui/button";
 
 const menuItems = [
-  { href: "/", label: "Home Feed", icon: Home },
-  { href: "/library", label: "Library", icon: Library },
+  { href: "/", label: "System Feed", icon: Home },
+  { href: "/library", label: "Archive", icon: Library },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

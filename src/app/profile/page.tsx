@@ -9,7 +9,7 @@ export default function ProfilePage() {
   const favorites = getBooks().slice(2, 6);
 
   return (
-    <div className="flex flex-col gap-8 p-4 md:p-8">
+    <div className="flex flex-col gap-8 p-4 md:p-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-headline text-accent">USER_PROFILE</h1>
         <p className="text-muted-foreground">Operator session logs and preferences.</p>
@@ -32,7 +32,7 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="border-border/50 bg-card">
           <CardHeader>
-            <CardTitle className="font-headline text-lg text-accent/80">Reading History</CardTitle>
+            <CardTitle className="font-headline text-lg text-accent/80">SESSION_LOGS</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
         <Card className="border-border/50 bg-card">
           <CardHeader>
-            <CardTitle className="font-headline text-lg text-accent/80">Favorited Books</CardTitle>
+            <CardTitle className="font-headline text-lg text-accent/80">PINNED_TRANSMISSIONS</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -69,10 +69,10 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-4">
           <Button variant="outline" className="border-border/50">
-            <Download className="mr-2 h-4 w-4" /> Export Bookmarks
+            <Download className="mr-2 h-4 w-4" /> EXPORT_PINS
           </Button>
           <Button variant="outline" className="border-border/50">
-            <Download className="mr-2 h-4 w-4" /> Export Completed Titles
+            <Download className="mr-2 h-4 w-4" /> EXPORT_COMPLETED_LOGS
           </Button>
         </CardContent>
       </Card>

@@ -19,7 +19,7 @@ const SourceStatus = ({ status }: { status: 'Online' | 'Offline' | 'Error' }) =>
 
 export default function SettingsPage() {
   return (
-    <div className="flex flex-col gap-8 p-4 md:p-8">
+    <div className="flex flex-col gap-8 p-4 md:p-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-headline text-accent">SYSTEM_CONFIG</h1>
         <p className="text-muted-foreground">Configure operator preferences and system parameters.</p>
@@ -27,9 +27,9 @@ export default function SettingsPage() {
 
       <Tabs defaultValue="appearance" className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-input border border-border/50">
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="reading">Reading</TabsTrigger>
-          <TabsTrigger value="sources">Sources</TabsTrigger>
+          <TabsTrigger value="appearance">Interface</TabsTrigger>
+          <TabsTrigger value="reading">Reader</TabsTrigger>
+          <TabsTrigger value="sources">Nodes</TabsTrigger>
         </TabsList>
         <TabsContent value="appearance">
           <Card className="border-border/50 bg-card">
@@ -90,7 +90,7 @@ export default function SettingsPage() {
           <Card className="border-border/50 bg-card">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="font-headline text-lg text-accent/80">Source Manager</CardTitle>
+                <CardTitle className="font-headline text-lg text-accent/80">TRANSMISSION_NODES</CardTitle>
                 <CardDescription>Manage content sources.</CardDescription>
               </div>
               <Button variant="outline" size="icon" className="border-border/50">
@@ -111,10 +111,10 @@ export default function SettingsPage() {
                 <SourceStatus status="Offline" />
               </div>
               <div className="pt-4">
-                <Label htmlFor="add-source" className="text-accent/80">Add Source from URL</Label>
+                <Label htmlFor="add-source" className="text-accent/80">&gt; IMPORT FROM NODE URL</Label>
                 <div className="flex items-center gap-2 mt-2">
                     <Input id="add-source" placeholder="https://example.com/book.epub" className="bg-input border-border/50"/>
-                    <Button>Add</Button>
+                    <Button>Import()</Button>
                 </div>
               </div>
             </CardContent>

@@ -14,7 +14,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </Sidebar>
         <SidebarInset className="bg-background">
           <AppHeader />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 animate-fade-in">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>
