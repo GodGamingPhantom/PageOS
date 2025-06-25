@@ -17,7 +17,7 @@ import {
   User,
   Power,
 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { href: "/", label: "System Feed", icon: Home },

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Book } from "@/lib/types";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { Progress } from "./ui/progress";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 export function BookCard({ book }: { book: Book }) {
   const getFileExtension = (source: string) => {

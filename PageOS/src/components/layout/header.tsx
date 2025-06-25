@@ -2,7 +2,7 @@
 
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
 export function AppHeader() {
