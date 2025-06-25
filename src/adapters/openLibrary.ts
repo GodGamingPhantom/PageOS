@@ -42,7 +42,7 @@ export async function fetchOpenLibrary(query: string): Promise<MappedOpenLibrary
 
 export async function fetchOpenLibraryContent(editionKey: string): Promise<string> {
   const url = `https://openlibrary.org/books/${editionKey}.txt`;
-  const res = await fetch(url);
+  const res = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch book content from Open Library for edition ${editionKey}`);
   }

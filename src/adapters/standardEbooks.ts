@@ -44,7 +44,7 @@ export async function fetchStandardEbooks(query: string): Promise<MappedStandard
 }
 
 export async function fetchStandardEbookContent(epubUrl: string): Promise<Blob> {
-  const res = await fetch(epubUrl);
+  const res = await fetch(`/api/proxy?url=${encodeURIComponent(epubUrl)}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch book content from ${epubUrl}`);
   }

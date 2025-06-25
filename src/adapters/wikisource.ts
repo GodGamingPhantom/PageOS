@@ -46,11 +46,12 @@ type WikisourceContentResponse = {
 };
 
 export async function fetchWikisourceContent(pageid: number): Promise<string> {
-  const res = await fetch(`https://en.wikisource.org/w/api.php?action=query&prop=revisions&rvprop=content&pageids=${pageid}&format=json&origin=*`);
+  const url = `https://en.wikisource.org/w/api.php?action=query&prop=revisions&rvprop=content&pageids=${pageid}&format=json&origin=*`;
+  const res = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch content from Wikisource for pageid ${pageid}`);
   }
   const data: WikisourceContentResponse = await res.json();
-  const content = data.query.pages[pageid].revisions[0]['*'];
+  const content = data.query.pages[String(pageid)].revisions[0]['*'];
   return content;
 }

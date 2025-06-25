@@ -39,7 +39,7 @@ export async function fetchGutenbergBookContent(formats: Record<string, string>)
   const plainTextUrl = formats['text/plain; charset=utf-8'] || formats['text/plain'];
 
   if (plainTextUrl) {
-    const res = await fetch(plainTextUrl);
+    const res = await fetch(`/api/proxy?url=${encodeURIComponent(plainTextUrl)}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch book content from ${plainTextUrl}`);
     }
@@ -48,7 +48,7 @@ export async function fetchGutenbergBookContent(formats: Record<string, string>)
 
   const epubUrl = formats['application/epub+zip'];
   if (epubUrl) {
-    const res = await fetch(epubUrl);
+    const res = await fetch(`/api/proxy?url=${encodeURIComponent(epubUrl)}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch book content from ${epubUrl}`);
     }
