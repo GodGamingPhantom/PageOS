@@ -4,6 +4,8 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import MainLayout from "@/components/layout/main-layout";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/context/theme-provider";
+import { ReaderSettingsProvider } from "@/context/reader-settings-provider";
 
 const fontHeadline = Orbitron({
   subsets: ["latin"],
@@ -31,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
           "min-h-screen bg-background font-body antialiased",
@@ -40,8 +42,12 @@ export default function RootLayout({
           fontReader.variable
         )}
       >
-        <MainLayout>{children}</MainLayout>
-        <Toaster />
+        <ThemeProvider>
+          <ReaderSettingsProvider>
+            <MainLayout>{children}</MainLayout>
+            <Toaster />
+          </ReaderSettingsProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
