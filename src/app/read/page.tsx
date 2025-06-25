@@ -1,45 +1,11 @@
-
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState, Suspense, useCallback } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, ChevronLeft, ChevronRight, LoaderCircle, Settings, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useReaderSettings } from '@/context/reader-settings-provider';
-
-function PagedContent({ content }: { content: string }) {
-  const [page, setPage] = useState(0);
-  const words = content.split(/\s+/);
-  const wordsPerPage = 250;
-  const pageCount = Math.ceil(words.length / wordsPerPage);
-  
-  const pages = React.useMemo(() => Array.from({ length: pageCount }, (_, i) => 
-    words.slice(i * wordsPerPage, (i + 1) * wordsPerPage).join(' ')
-  ), [words, pageCount, wordsPerPage]);
-
-  if (pageCount === 0) {
-    return <p>No content to display.</p>;
-  }
-
-  return (
-    <div className="flex flex-col h-full">
-      <pre className="flex-1 whitespace-pre-wrap font-reader text-lg leading-relaxed text-foreground/90 overflow-y-auto">
-        {pages[page]}
-      </pre>
-      <div className="flex justify-between items-center mt-4 pt-4 border-t border-border/50">
-        <Button variant="outline" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}>
-          <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-        </Button>
-        <span className="text-sm text-muted-foreground">Page {page + 1} of {pageCount}</span>
-        <Button variant="outline" onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1}>
-          Next <ChevronRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 
 function Reader() {
   const searchParams = useSearchParams();
@@ -47,7 +13,7 @@ function Reader() {
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { readingMode, autoScroll } = useReaderSettings();
+  const { autoScroll } = useReaderSettings();
 
   const title = searchParams.get('title') || 'Untitled';
   const source = searchParams.get('source')?.toUpperCase() || 'UNKNOWN';
@@ -104,7 +70,7 @@ function Reader() {
   
   useEffect(() => {
     let scrollInterval: NodeJS.Timeout | null = null;
-    if (autoScroll && readingMode === 'scroll' && content && !isLoading) {
+    if (autoScroll && content && !isLoading) {
       scrollInterval = setInterval(() => {
         // The main element is the one that scrolls
         document.querySelector('main')?.scrollBy(0, 1);
@@ -115,7 +81,7 @@ function Reader() {
         clearInterval(scrollInterval);
       }
     };
-  }, [autoScroll, readingMode, content, isLoading]);
+  }, [autoScroll, content, isLoading]);
 
 
   const renderContent = () => {
@@ -137,9 +103,6 @@ function Reader() {
       );
     }
     if (content) {
-       if (readingMode === 'paged') {
-        return <PagedContent content={content} />;
-      }
       return <pre className="whitespace-pre-wrap font-reader text-lg leading-relaxed text-foreground/90">{content}</pre>;
     }
     return <div className="flex flex-1 justify-center items-center"><p>No content to display.</p></div>;

@@ -45,7 +45,7 @@ const SourceStatus = ({ status }: { status: Status }) => {
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { readingMode, setReadingMode, autoScroll, setAutoScroll, sourceSettings, toggleSource } = useReaderSettings();
+  const { autoScroll, setAutoScroll, sourceSettings, toggleSource } = useReaderSettings();
   
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, Status>>({});
 
@@ -145,28 +145,6 @@ export default function SettingsPage() {
               <CardDescription>Customize the transmission reader.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between rounded-md border border-border/50 p-4">
-                <Label htmlFor="mode-scroll" className="flex flex-col gap-1 cursor-pointer">
-                  <span>Scroll Mode</span>
-                  <span className="font-normal text-muted-foreground">Continuous vertical scrolling.</span>
-                </Label>
-                <Switch 
-                  id="mode-scroll"
-                  checked={readingMode === 'scroll'}
-                  onCheckedChange={(checked) => checked && setReadingMode('scroll')}
-                />
-              </div>
-              <div className="flex items-center justify-between rounded-md border border-border/50 p-4">
-                <Label htmlFor="mode-paged" className="flex flex-col gap-1 cursor-pointer">
-                  <span>Page Mode</span>
-                  <span className="font-normal text-muted-foreground">Horizontal page-by-page turning.</span>
-                </Label>
-                <Switch 
-                  id="mode-paged"
-                  checked={readingMode === 'paged'}
-                  onCheckedChange={(checked) => checked && setReadingMode('paged')}
-                />
-              </div>
                <div className="flex items-center justify-between rounded-md border border-border/50 p-4">
                 <Label htmlFor="mode-autoscroll" className="flex flex-col gap-1 cursor-pointer">
                   <span>Auto-scroll</span>
