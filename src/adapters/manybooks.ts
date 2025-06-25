@@ -50,28 +50,31 @@ export async function fetchManyBooks(query: string): Promise<MappedManybooksBook
 
 export async function fetchManybooksContent(bookPath: string): Promise<string> {
     try {
-        // First, fetch the main book page to find the "Read online" link
+        // First, fetch the main book page to find the download link
         const bookPageDoc = await getDOM(`/api/manybooks?path=${encodeURIComponent(bookPath)}`);
-        const readOnlineLink = bookPageDoc.querySelector('a.btn-primary[href*="/read"]');
         
-        const readPath = readOnlineLink?.getAttribute('href');
-        if (!readPath) {
-            throw new Error('Could not find "Read online" link for this book.');
+        // Find the "Plain Text" download link.
+        const downloadLinks = Array.from(bookPageDoc.querySelectorAll('a.dropdown-item'));
+        const plainTextLink = downloadLinks.find(a => a.textContent?.trim() === 'Plain Text');
+
+        const downloadPath = plainTextLink?.getAttribute('href');
+        
+        if (!downloadPath) {
+            const epubLink = downloadLinks.find(a => a.textContent?.trim() === 'EPUB');
+            if (epubLink) {
+                 throw new Error('This book is available as an EPUB, but the reader for this format is not yet implemented.');
+            }
+            throw new Error('Could not find a readable download format (Plain Text) for this book on ManyBooks.');
         }
 
-        // The href might be a full URL, so we extract the path
-        const urlObject = new URL(readPath);
-        const contentPath = urlObject.pathname;
-        
-        // Now fetch the reader page content
-        const readerPageDoc = await getDOM(`/api/manybooks?path=${encodeURIComponent(contentPath)}`);
-        const contentContainer = readerPageDoc.querySelector('div.prose');
-
-        if (!contentContainer) {
-            throw new Error('Could not find content container on the reader page.');
+        // Now fetch the text content from the download path
+        const contentRes = await fetch(`/api/manybooks?path=${encodeURIComponent(downloadPath)}`);
+        if (!contentRes.ok) {
+            throw new Error(`Failed to fetch book content from download path: ${downloadPath}`);
         }
+        const bookContent = await contentRes.text();
         
-        return contentContainer.textContent || 'Content could not be extracted.';
+        return bookContent;
 
     } catch (error) {
         console.error('Failed to fetch ManyBooks content:', error);
