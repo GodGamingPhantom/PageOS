@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, Search } from "lucide-react";
-import type { SearchResult } from "@/adapters/sourceManager";
+import type { SearchResult, SourceKey } from "@/adapters/sourceManager";
 import { searchBooksAcrossSources } from "@/adapters/sourceManager";
+import { useReaderSettings } from "@/context/reader-settings-provider";
 
 interface CommandSearchProps {
   onResults: (results: SearchResult[]) => void;
@@ -14,6 +15,7 @@ interface CommandSearchProps {
 export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
   const [value, setValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const { sourceSettings } = useReaderSettings();
 
   const handleSearch = async () => {
     if (!value) {
@@ -23,7 +25,11 @@ export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
     setIsSearching(true);
     onLoading(true);
     try {
-      const results = await searchBooksAcrossSources(value);
+      const enabledSources = Object.entries(sourceSettings)
+        .filter(([, isEnabled]) => isEnabled)
+        .map(([key]) => key as SourceKey);
+
+      const results = await searchBooksAcrossSources(value, enabledSources);
       onResults(results);
     } catch (error) {
       console.error("Search failed:", error);

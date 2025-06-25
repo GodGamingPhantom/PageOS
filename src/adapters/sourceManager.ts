@@ -12,20 +12,37 @@ import type { MappedManybooksBook } from './manybooks';
 
 export type SearchResult = MappedGutenbergBook | MappedStandardEbook | MappedOpenLibraryBook | MappedWikisourceBook | MappedManybooksBook;
 
-export async function searchBooksAcrossSources(query: string): Promise<SearchResult[]> {
+const sourceFetchers = {
+  gutendex: gutendex.fetchGutenbergBooks,
+  standardEbooks: standardEbooks.fetchStandardEbooks,
+  openLibrary: openLibrary.fetchOpenLibrary,
+  wikisource: wikisource.fetchWikisource,
+  manybooks: manybooks.fetchManyBooks,
+};
+
+export type SourceKey = keyof typeof sourceFetchers;
+
+export async function searchBooksAcrossSources(query: string, enabledSources?: SourceKey[]): Promise<SearchResult[]> {
   if (!query) return [];
-  
-  const promises = [
-    gutendex.fetchGutenbergBooks(query).catch(e => { console.error("Gutendex search failed:", e); return []; }),
-    standardEbooks.fetchStandardEbooks(query).catch(e => { console.error("Standard Ebooks search failed:", e); return []; }),
-    openLibrary.fetchOpenLibrary(query).catch(e => { console.error("Open Library search failed:", e); return []; }),
-    wikisource.fetchWikisource(query).catch(e => { console.error("Wikisource search failed:", e); return []; }),
-    manybooks.fetchManyBooks(query).catch(e => { console.error("ManyBooks search failed:", e); return []; }),
-  ];
+
+  const sourcesToSearch: SourceKey[] = enabledSources ?? Object.keys(sourceFetchers) as SourceKey[];
+
+  const promises = sourcesToSearch.map(sourceKey => {
+    const fetcher = sourceFetchers[sourceKey];
+    if (!fetcher) {
+        console.warn(`No fetcher found for source: ${sourceKey}`);
+        return Promise.resolve([]);
+    }
+    return fetcher(query).catch(e => {
+      console.error(`${sourceKey} search failed:`, e);
+      return [];
+    });
+  });
 
   const results = await Promise.all(promises);
   return results.flat();
 }
+
 
 export async function fetchBookContent(book: SearchResult): Promise<string | Blob> {
   switch (book.source) {

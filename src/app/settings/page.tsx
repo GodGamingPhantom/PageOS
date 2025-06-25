@@ -13,11 +13,20 @@ import { useReaderSettings } from "@/context/reader-settings-provider";
 
 type Status = 'Online' | 'Offline' | 'Error' | 'Checking';
 
+const ALL_SOURCES = [
+  { key: 'gutendex', name: 'Project Gutenberg', checkUrl: 'https://gutendex.com/books/?search=a' },
+  { key: 'standardEbooks', name: 'Standard Ebooks', checkUrl: 'https://standardebooks.org/api/v1/ebooks/?query=a' },
+  { key: 'openLibrary', name: 'Open Library', checkUrl: 'https://openlibrary.org/search.json?q=a&limit=1' },
+  { key: 'wikisource', name: 'Wikisource', checkUrl: 'https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=a&format=json&origin=*' },
+  { key: 'manybooks', name: 'ManyBooks', checkUrl: '/api/manybooks?search=a', direct: true },
+];
+
+
 const SourceStatus = ({ status }: { status: Status }) => {
   if (status === 'Checking') {
     return (
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <LoaderCircle className="h-4 w-4 animate-spin" />
+      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+        <LoaderCircle className="h-3 w-3 animate-spin" />
         <span>Checking...</span>
       </div>
     );
@@ -27,8 +36,8 @@ const SourceStatus = ({ status }: { status: Status }) => {
   const color = status === 'Online' ? 'text-accent' : status === 'Offline' ? 'text-muted-foreground' : 'text-destructive';
   
   return (
-    <div className="flex items-center gap-2">
-      <Icon className={`h-4 w-4 ${color}`} />
+    <div className="flex items-center gap-2 text-xs">
+      <Icon className={`h-3 w-3 ${color}`} />
       <span className={color}>{status}</span>
     </div>
   );
@@ -36,21 +45,16 @@ const SourceStatus = ({ status }: { status: Status }) => {
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { readingMode, setReadingMode, autoScroll, setAutoScroll } = useReaderSettings();
+  const { readingMode, setReadingMode, autoScroll, setAutoScroll, sourceSettings, toggleSource } = useReaderSettings();
   
-  const [sourceStatuses, setSourceStatuses] = useState<Record<string, Status>>({
-    'Project Gutenberg': 'Checking',
-    'Standard Ebooks': 'Checking',
-    'Open Library': 'Checking',
-    'Wikisource': 'Checking',
-    'ManyBooks': 'Checking',
-  });
+  const [sourceStatuses, setSourceStatuses] = useState<Record<string, Status>>({});
 
   const [newSourceUrl, setNewSourceUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
 
   const checkSourceStatuses = useCallback(async () => {
-    setSourceStatuses(prev => Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: 'Checking' }), {}));
+    const initialStatuses = ALL_SOURCES.reduce((acc, source) => ({...acc, [source.name]: 'Checking'}), {});
+    setSourceStatuses(initialStatuses);
 
     const check = async (url: string): Promise<Status> => {
       try {
@@ -60,18 +64,17 @@ export default function SettingsPage() {
         return 'Error';
       }
     };
-    
-    const checkViaProxy = (targetUrl: string) => check(`/api/proxy?url=${encodeURIComponent(targetUrl)}`);
 
-    const statuses = {
-      'Project Gutenberg': await checkViaProxy('https://gutendex.com/books/?search=a'),
-      'Standard Ebooks': await checkViaProxy('https://standardebooks.org/api/v1/ebooks/?query=a'),
-      'Open Library': await checkViaProxy('https://openlibrary.org/search.json?q=a&limit=1'),
-      'Wikisource': await checkViaProxy('https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=a&format=json&origin=*'),
-      'ManyBooks': await check('/api/manybooks?search=a'),
-    };
+    const statusPromises = ALL_SOURCES.map(async (source) => {
+      const status = source.direct 
+        ? await check(source.checkUrl)
+        : await check(`/api/proxy?url=${encodeURIComponent(source.checkUrl)}`);
+      return { name: source.name, status };
+    });
+
+    const settledStatuses = await Promise.all(statusPromises);
     
-    setSourceStatuses(statuses);
+    setSourceStatuses(prev => settledStatuses.reduce((acc, {name, status}) => ({ ...acc, [name]: status }), { ...prev }));
 
   }, []);
 
@@ -183,17 +186,24 @@ export default function SettingsPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="font-headline text-lg text-accent/80">TRANSMISSION_NODES</CardTitle>
-                <CardDescription>Manage content sources.</CardDescription>
+                <CardDescription>Manage and monitor content sources.</CardDescription>
               </div>
               <Button variant="outline" size="icon" className="border-border/50" onClick={checkSourceStatuses}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {Object.entries(sourceStatuses).map(([name, status]) => (
-                 <div key={name} className="flex items-center justify-between rounded-md border border-border/50 p-4">
-                   <p>{name}</p>
-                   <SourceStatus status={status} />
+              {ALL_SOURCES.map((source) => (
+                 <div key={source.key} className="flex items-center justify-between rounded-md border border-border/50 p-4">
+                   <div>
+                     <p>{source.name}</p>
+                     <SourceStatus status={sourceStatuses[source.name] || 'Checking'} />
+                   </div>
+                   <Switch
+                      checked={sourceSettings[source.key] ?? true}
+                      onCheckedChange={() => toggleSource(source.key)}
+                      aria-label={`Toggle ${source.name}`}
+                   />
                  </div>
               ))}
               <div className="pt-4">
