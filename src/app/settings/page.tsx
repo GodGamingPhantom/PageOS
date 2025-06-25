@@ -65,7 +65,7 @@ export default function SettingsPage() {
 
     const statuses = {
       'Project Gutenberg': await checkViaProxy('https://gutendex.com/books/?search=a'),
-      'Standard Ebooks': await checkViaProxy('https://standardebooks.org/api/v1/ebooks/?title__icontains=a'),
+      'Standard Ebooks': await checkViaProxy('https://standardebooks.org/api/v1/ebooks/?query=a'),
       'Open Library': await checkViaProxy('https://openlibrary.org/search.json?q=a&limit=1'),
       'Wikisource': await checkViaProxy('https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=a&format=json&origin=*'),
       'ManyBooks': await check('/api/manybooks?search=a'),
