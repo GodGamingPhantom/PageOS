@@ -61,9 +61,9 @@ export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
   return (
     <div className="flex items-center gap-2">
       <div className="relative grow">
-        <span className="absolute left-4 font-body text-accent/80 flex items-center gap-2 pointer-events-none z-10">
+        <span className="absolute left-4 top-0 h-full font-body text-accent/80 flex items-center gap-2 pointer-events-none z-10 text-lg">
           <span>&gt;</span>
-          {!isSearching && <span className="animate-cursor-blink bg-accent w-2 h-4 inline-block" />}
+          {!isSearching && <span className="animate-cursor-blink bg-accent w-2 h-5 inline-block" />}
         </span>
         <Input
           type="text"
