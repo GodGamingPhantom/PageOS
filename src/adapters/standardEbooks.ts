@@ -1,9 +1,9 @@
 
 type StandardEbook = {
-  id: string;
+  url: string;
   title: string;
-  authors: { name: string }[];
-  sources: { uri: string; 'media-type': string }[];
+  contributors: { name: string }[];
+  downloads: { type: string, url: string }[];
 };
 
 type StandardEbooksAPIResponse = {
@@ -20,18 +20,19 @@ export type MappedStandardEbook = {
 
 export async function fetchStandardEbooks(query: string): Promise<MappedStandardEbook[]> {
   if (!query) return [];
-  const res = await fetch(`https://standardebooks.org/api/v1/ebooks/?title-contains=${encodeURIComponent(query)}`);
+  const res = await fetch(`https://standardebooks.org/api/v1/ebooks/?title__icontains=${encodeURIComponent(query)}`);
   if (!res.ok) {
     console.error('Failed to fetch from Standard Ebooks:', res.statusText);
     return [];
   }
+  
   const data: StandardEbooksAPIResponse = await res.json();
   
   return data.results.map(book => ({
-    id: book.id,
+    id: book.url,
     title: book.title,
-    authors: book.authors.map(a => a.name).join(', '),
-    epub: book.sources.find(s => s['media-type'] === 'application/epub+zip')?.uri,
+    authors: book.contributors.map(c => c.name).join(', '),
+    epub: book.downloads.find(d => d.type === 'application/epub+zip')?.url,
     source: 'standardEbooks'
   }));
 }
