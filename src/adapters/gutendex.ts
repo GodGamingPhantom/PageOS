@@ -35,14 +35,25 @@ export async function fetchGutenbergBooks(query: string, page = 1): Promise<Mapp
   }));
 }
 
-export async function fetchGutenbergBookContent(formats: Record<string, string>): Promise<string> {
-  const url = formats['text/plain; charset=utf-8'] || formats['text/plain'];
-  if (!url) {
-    throw new Error('No plain text format found for this Gutendex book.');
+export async function fetchGutenbergBookContent(formats: Record<string, string>): Promise<string | Blob> {
+  const plainTextUrl = formats['text/plain; charset=utf-8'] || formats['text/plain'];
+
+  if (plainTextUrl) {
+    const res = await fetch(plainTextUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch book content from ${plainTextUrl}`);
+    }
+    return await res.text();
   }
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch book content from ${url}`);
+
+  const epubUrl = formats['application/epub+zip'];
+  if (epubUrl) {
+    const res = await fetch(epubUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch book content from ${epubUrl}`);
+    }
+    return await res.blob();
   }
-  return await res.text();
+
+  throw new Error('No compatible book format found for this Gutendex book (epub or txt).');
 }
