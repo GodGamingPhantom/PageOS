@@ -1,55 +1,28 @@
-import { BookCard } from "@/components/book-card";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { getBooks } from "@/lib/mock-data";
-import { Grid3x3, List } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Library } from "lucide-react";
 
 export default function LibraryPage() {
-  const books = getBooks();
-
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8 animate-fade-in">
-      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-headline text-accent">ARCHIVE_DIRECTORY</h1>
-          <p className="text-muted-foreground">
-            {books.length} memory logs synchronized.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-           <Select defaultValue="last-accessed">
-            <SelectTrigger className="w-[180px] border-border/50 bg-input focus:border-accent">
-              <SelectValue placeholder="Sort Mode" />
-            </SelectTrigger>
-            <SelectContent className="border-border/50 bg-background">
-              <SelectItem value="last-accessed">Last Accessed</SelectItem>
-              <SelectItem value="title">Title</SelectItem>
-              <SelectItem value="author">Author</SelectItem>
-              <SelectItem value="progress">Progress</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="icon" className="border-border/50 bg-input text-accent">
-            <Grid3x3 className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" className="border-border/50 bg-input text-muted-foreground">
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
+      <header>
+        <h1 className="text-3xl font-headline text-accent">ARCHIVE_DIRECTORY</h1>
+        <p className="text-muted-foreground">
+          Your personal collection of synchronized memory logs.
+        </p>
       </header>
-
-      <section>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {books.map((book) => (
-            <BookCard key={book.id} book={book} />
-          ))}
-        </div>
-      </section>
+      <Card className="border-border/50 bg-card text-center">
+        <CardHeader>
+            <div className="mx-auto bg-input rounded-full p-3 w-fit">
+            <Library className="h-8 w-8 text-accent" />
+            </div>
+        </CardHeader>
+        <CardContent>
+          <CardTitle className="font-headline text-lg text-accent/80">ARCHIVE IS EMPTY</CardTitle>
+          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+            Search for transmissions and save them to your archive for offline access. This feature is currently under development.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -2,18 +2,12 @@
 "use client";
 
 import { useState } from "react";
-import { BookCard } from "@/components/book-card";
 import { CommandSearch } from "@/components/command-search";
-import { getBooks } from "@/lib/mock-data";
 import type { SearchResult } from "@/adapters/sourceManager";
 import { SearchResultCard } from "@/components/search-result-card";
 import { LoaderCircle } from "lucide-react";
 
 export default function HomePage() {
-  const books = getBooks();
-  const trendingBooks = books.slice(0, 4);
-  const recentBooks = books.slice(4, 8);
-
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,29 +39,10 @@ export default function HomePage() {
           </div>
         </section>
       ) : (
-        <>
-          <section>
-            <h2 className="font-headline text-lg text-accent/80 mb-4 border-b border-dashed border-border pb-2">
-              // TRENDING_NOW
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {trendingBooks.map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h2 className="font-headline text-lg text-accent/80 mb-4 border-b border-dashed border-border pb-2">
-              // RECENTLY_ADDED
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {recentBooks.map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
-            </div>
-          </section>
-        </>
+         <div className="flex flex-col items-center justify-center text-center p-8 text-muted-foreground/80">
+            <p className="font-headline text-lg text-accent/80">Awaiting Transmission</p>
+            <p>Use the command line above to query the public domain archives.</p>
+         </div>
       )}
     </div>
   );

@@ -1,12 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { getBooks } from "@/lib/mock-data";
-import { Download, Upload } from "lucide-react";
+import { Download } from "lucide-react";
 
 export default function ProfilePage() {
-  const history = getBooks().slice(0, 4);
-  const favorites = getBooks().slice(2, 6);
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8 animate-fade-in">
@@ -28,40 +24,6 @@ export default function ProfilePage() {
           </Button>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-border/50 bg-card">
-          <CardHeader>
-            <CardTitle className="font-headline text-lg text-accent/80">SESSION_LOGS</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {history.map((book) => (
-                <li key={book.id} className="text-sm text-foreground">
-                  <span className="text-muted-foreground mr-2">{book.lastAccessed}:</span> 
-                  Accessed '{book.title}'
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 bg-card">
-          <CardHeader>
-            <CardTitle className="font-headline text-lg text-accent/80">PINNED_TRANSMISSIONS</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {favorites.map((book) => (
-                <li key={book.id} className="text-sm text-foreground">
-                  <span className="text-accent/80 mr-2">▸</span>
-                  {book.title}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
 
       <Card className="border-border/50 bg-card">
         <CardHeader>
