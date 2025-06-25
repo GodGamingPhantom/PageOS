@@ -1,0 +1,56 @@
+
+type WikisourceSearchItem = {
+    pageid: number;
+    title: string;
+};
+
+type WikisourceSearchResponse = {
+    query: {
+        search: WikisourceSearchItem[];
+    };
+};
+
+export type MappedWikisourceBook = {
+    id: string;
+    pageid: number;
+    title: string;
+    authors: string;
+    source: 'wikisource';
+};
+
+export async function fetchWikisource(query: string): Promise<MappedWikisourceBook[]> {
+  if (!query) return [];
+  const res = await fetch(`https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
+  if (!res.ok) {
+    console.error('Failed to fetch from Wikisource:', res.statusText);
+    return [];
+  }
+  const data: WikisourceSearchResponse = await res.json();
+  return data.query.search.map(item => ({
+    id: String(item.pageid),
+    pageid: item.pageid,
+    title: item.title,
+    authors: 'N/A',
+    source: 'wikisource'
+  }));
+}
+
+type WikisourceContentResponse = {
+    query: {
+        pages: {
+            [pageid: string]: {
+                revisions: { '*': string }[];
+            }
+        }
+    }
+};
+
+export async function fetchWikisourceContent(pageid: number): Promise<string> {
+  const res = await fetch(`https://en.wikisource.org/w/api.php?action=query&prop=revisions&rvprop=content&pageids=${pageid}&format=json&origin=*`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch content from Wikisource for pageid ${pageid}`);
+  }
+  const data: WikisourceContentResponse = await res.json();
+  const content = data.query.pages[pageid].revisions[0]['*'];
+  return content;
+}
