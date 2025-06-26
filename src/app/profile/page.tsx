@@ -1,4 +1,3 @@
-
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -75,7 +74,7 @@ export default function ProfilePage() {
            <CardDescription>
             This feature is currently under development.
           </CardDescription>
-        </Header>
+        </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-4">
           <Button variant="outline" className="border-border/50" disabled>
             <Download className="mr-2 h-4 w-4" /> EXPORT_PINS
