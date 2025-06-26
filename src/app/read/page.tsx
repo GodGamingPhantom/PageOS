@@ -304,8 +304,8 @@ function Reader() {
         </div>
       </header>
 
-      <main className="flex-1 relative overflow-hidden flex flex-col">
-        <div className="flex-grow">
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-grow relative">
           {renderContent()}
         </div>
         <div className="py-4">
