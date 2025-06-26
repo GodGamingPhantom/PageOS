@@ -23,6 +23,7 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
 
     if (book.source === 'gutendex' && bookData.formats) (book as any).formats = JSON.parse(bookData.formats);
     else if (book.source === 'openLibrary' && bookData.edition) (book as any).edition = bookData.edition;
+    else if (book.source === 'standardEbooks' && bookData.slug) (book as any).slug = bookData.slug;
 
     return book as SearchResult;
 }

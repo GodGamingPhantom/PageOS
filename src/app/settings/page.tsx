@@ -17,6 +17,7 @@ type Status = 'Online' | 'Offline' | 'Error' | 'Checking';
 const ALL_SOURCES = [
   { key: 'gutendex', name: 'Project Gutenberg', checkUrl: 'https://gutendex.com/books/?search=a' },
   { key: 'openLibrary', name: 'Open Library', checkUrl: 'https://openlibrary.org/search.json?q=a&limit=1' },
+  { key: 'standardEbooks', name: 'Standard Ebooks', checkUrl: 'https://standardebooks.org/ebooks' },
 ];
 
 

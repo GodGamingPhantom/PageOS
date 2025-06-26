@@ -4,6 +4,7 @@ const ALLOWED_DOMAINS = [
   'www.gutenberg.org',
   'openlibrary.org',
   'gutendex.com',
+  'standardebooks.org',
 ];
 
 export async function GET(request: NextRequest) {

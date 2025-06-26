@@ -21,6 +21,9 @@ function createBookQuery(book: SearchResult): string {
         params.set("cover", book.cover);
       }
       break;
+    case "standardEbooks":
+      params.set("slug", book.slug);
+      break;
   }
   return params.toString();
 }
