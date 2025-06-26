@@ -223,54 +223,60 @@ function Reader() {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex flex-col flex-1 justify-center items-center gap-4">
-          <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
-          <p>Rendering Transmission...</p>
+        <div className="flex-1 grid place-items-center">
+          <div className="flex flex-col items-center gap-4">
+            <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
+            <p>Rendering Transmission...</p>
+          </div>
         </div>
       );
     }
     if (error) {
       return (
-        <div className="flex flex-col flex-1 justify-center items-center gap-4 text-destructive">
-          <AlertTriangle className="h-8 w-8" />
-          <p className="font-headline">TRANSMISSION_ERROR</p>
-          <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+        <div className="flex-1 grid place-items-center">
+          <div className="flex flex-col items-center gap-4 text-destructive">
+            <AlertTriangle className="h-8 w-8" />
+            <p className="font-headline">TRANSMISSION_ERROR</p>
+            <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+          </div>
         </div>
       );
     }
     const currentSector = sectors[activeSector];
-    if (!currentSector) return <div className="flex flex-1 justify-center items-center"><p>No content to display.</p></div>;
+    if (!currentSector) return <div className="flex-1 grid place-items-center"><p>No content to display.</p></div>;
     
     return (
-      <AnimatePresence initial={false} custom={direction}>
-        <motion.div
-          key={activeSector}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 300, damping: 30 },
-            opacity: { duration: 0.2 },
-          }}
-          className="absolute inset-0 flex items-center justify-center p-4"
-        >
-          <div className="w-full max-w-4xl">
-            <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+      <div className="flex-1 relative">
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
+            key={activeSector}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 },
+            }}
+            className="absolute inset-0 grid place-items-center"
+          >
+            <div className="w-full max-w-4xl p-4">
+              <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                  ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+              </div>
+              <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                  {currentSector.map((para, pi) => (
+                      <p key={pi} className="sector-paragraph">{para.trim()}</p>
+                  ))}
+              </div>
+              <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                  MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+              </div>
             </div>
-            <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                {currentSector.map((para, pi) => (
-                    <p key={pi} className="sector-paragraph">{para.trim()}</p>
-                ))}
-            </div>
-            <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     );
   };
 
@@ -302,10 +308,8 @@ function Reader() {
       </header>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 relative">
-          {renderContent()}
-        </div>
-        <div className="flex-none py-4">
+        {renderContent()}
+        <div className="flex-none py-4 flex justify-center">
           <ReaderControls
             onPrev={goToPrevSector}
             onNext={goToNextSector}
