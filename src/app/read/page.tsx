@@ -1,7 +1,8 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState, Suspense, useRef } from 'react';
+import { useEffect, useState, Suspense, useRef, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
 import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft } from 'lucide-react';
@@ -9,6 +10,8 @@ import { useReaderSettings } from '@/context/reader-settings-provider';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
+
+const SECTOR_SIZE = 4; // 4 paragraphs per sector
 
 function parseBookFromParams(params: URLSearchParams): SearchResult | null {
     const bookData = Object.fromEntries(params.entries());
@@ -40,16 +43,28 @@ function Reader() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { autoScroll } = useReaderSettings();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const [libraryBook, setLibraryBook] = useState<LibraryBook | null>(null);
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(true);
-  const [currentProgress, setCurrentProgress] = useState(0);
+  
+  // New state for S.E.C.T.O.R. system
+  const [activeSector, setActiveSector] = useState(0);
 
   const isBookmarked = !!libraryBook;
 
+  const sectors = useMemo(() => {
+    if (!content) return [];
+    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
+    const newSectors = [];
+    for (let i = 0; i < paragraphs.length; i += SECTOR_SIZE) {
+        newSectors.push(paragraphs.slice(i, i + SECTOR_SIZE));
+    }
+    return newSectors;
+  }, [content]);
+
+  // Load book content
   useEffect(() => {
     const parsedBook = parseBookFromParams(searchParams);
     if (!parsedBook) {
@@ -82,6 +97,7 @@ function Reader() {
     loadContent();
   }, [searchParams]);
   
+  // Get bookmark status from Firebase
   useEffect(() => {
     if (!user || !book) {
         setLibraryBook(null);
@@ -97,51 +113,60 @@ function Reader() {
 
   }, [user, book]);
 
+  // Auto-scroll to last read sector
   useEffect(() => {
-    if (libraryBook?.progress && mainRef.current && content) {
-        const mainEl = mainRef.current;
-        const scrollHeight = mainEl.scrollHeight - mainEl.clientHeight;
-        if (scrollHeight > 0) {
-            const scrollTop = (libraryBook.progress / 100) * scrollHeight;
-            mainEl.scrollTo({ top: scrollTop, behavior: 'auto' });
+    if (sectors.length > 0 && libraryBook?.lastReadSector) {
+        const sectorElement = document.getElementById(`sector-${libraryBook.lastReadSector}`);
+        if (sectorElement) {
+            // Using timeout to ensure DOM is fully ready
+            setTimeout(() => {
+                sectorElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+            }, 100);
         }
     }
-  }, [libraryBook, content]);
+  }, [sectors, libraryBook]);
 
+  // Debounced progress update to Firebase
   useEffect(() => {
-    let scrollInterval: NodeJS.Timeout | null = null;
-    if (autoScroll && content && !isLoading) {
-      scrollInterval = setInterval(() => {
-        document.querySelector('main')?.scrollBy(0, 1);
-      }, 50);
-    }
-    return () => {
-      if (scrollInterval) clearInterval(scrollInterval);
-    };
-  }, [autoScroll, content, isLoading]);
-  
-  useEffect(() => {
-    if (!isBookmarked || !user || !book || currentProgress === 0) return;
+    if (!isBookmarked || !user || !book || sectors.length === 0) return;
 
-    const bookId = generateBookId(book);
     const handler = setTimeout(() => {
-        updateBookProgress(user.uid, bookId, currentProgress).catch(e => console.error("Failed to save progress", e));
+        const bookId = generateBookId(book);
+        const percentage = sectors.length > 0 ? (activeSector / (sectors.length -1)) * 100 : 0;
+        updateBookProgress(user.uid, bookId, {
+            percentage: Math.min(100, percentage),
+            lastReadSector: activeSector
+        }).catch(e => console.error("Failed to save progress", e));
     }, 1500);
 
     return () => clearTimeout(handler);
-  }, [currentProgress, book, user, isBookmarked]);
+  }, [activeSector, book, user, isBookmarked, sectors.length]);
 
-  const handleScroll = () => {
-    if (!mainRef.current || !isBookmarked) return;
-    const mainEl = mainRef.current;
-    const { scrollTop, scrollHeight, clientHeight } = mainEl;
-    
-    const totalScrollable = scrollHeight - clientHeight;
-    if (totalScrollable <= 0) return;
+  // Set up IntersectionObserver to track active sector
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectorIndex = Number(entry.target.getAttribute('data-sector-index'));
+                    setActiveSector(sectorIndex);
+                }
+            });
+        },
+        { root: mainRef.current, threshold: 0.5 }
+    );
 
-    const progressPercentage = (scrollTop / totalScrollable) * 100;
-    setCurrentProgress(progressPercentage);
-  };
+    const sectorElements = mainRef.current?.querySelectorAll('[data-sector-index]');
+    if (sectorElements) {
+        sectorElements.forEach(el => observer.observe(el));
+    }
+
+    return () => {
+        if (sectorElements) {
+            sectorElements.forEach(el => observer.unobserve(el));
+        }
+    };
+  }, [sectors]); // Re-run when sectors are ready
 
   const handleToggleBookmark = async () => {
     if (!user || !book) {
@@ -199,8 +224,30 @@ function Reader() {
         </div>
       );
     }
-    if (content) {
-      return <pre className="whitespace-pre-wrap font-reader text-lg leading-relaxed text-foreground/90">{content}</pre>;
+    if (sectors.length > 0) {
+      return sectors.map((sector, index) => (
+        <motion.div
+            key={index}
+            id={`sector-${index}`}
+            data-sector-index={index}
+            className="sector-frame group relative my-12 rounded-lg border border-border/20 p-4 md:p-6 bg-card/50 transition-shadow duration-300 hover:border-accent/50 hover:box-glow"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.05 }}
+        >
+            <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                ▶ SECTOR {String(index + 1).padStart(4, '0')} ▍
+            </div>
+            <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                {sector.map((para, pi) => (
+                    <p key={pi} className="sector-paragraph">{para.trim()}</p>
+                ))}
+            </div>
+            <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                MEM.STREAM ▍ DECODING {((index + 1) / sectors.length * 100).toFixed(1)}%
+            </div>
+        </motion.div>
+      ));
     }
     return <div className="flex flex-1 justify-center items-center"><p>No content to display.</p></div>;
   };
@@ -233,12 +280,14 @@ function Reader() {
           </div>
         </header>
 
-        <main ref={mainRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-8 md:p-16 lg:p-24 flex flex-col">
-          <div className="mb-8 font-body text-sm text-accent/80 space-y-1">
-            <p>&gt;&gt;&gt; Transmission Link Established: "{book?.title || '...'}"</p>
-            <p>&gt;&gt;&gt; Rendering content...</p>
-          </div>
-          {renderContent()}
+        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-8 md:px-16 lg:px-24 xl:px-32 2xl:px-48 flex flex-col items-center">
+            <div className="w-full max-w-3xl">
+                <div className="my-8 font-body text-sm text-accent/80 space-y-1">
+                    <p>&gt;&gt;&gt; Transmission Link Established: "{book?.title || '...'}"</p>
+                    <p>&gt;&gt;&gt; Rendering S.E.C.T.O.R. stream...</p>
+                </div>
+                {renderContent()}
+            </div>
         </main>
       </div>
     </div>

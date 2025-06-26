@@ -9,7 +9,8 @@ export const generateBookId = (book: Pick<SearchResult, 'source' | 'id'>) => `${
 export type LibraryBook = {
   id: string; // The generated unique ID
   savedAt: string;
-  progress?: number;
+  progress?: number; // Overall percentage
+  lastReadSector?: number; // Index of last read "sector"
 } & SearchResult;
 
 /**
@@ -25,6 +26,7 @@ export async function addBookToLibrary(userId: string, book: SearchResult): Prom
     source: book.source,
     savedAt: new Date().toISOString(),
     progress: 0,
+    lastReadSector: 0,
   };
   await setDoc(userLibraryRef, bookData);
 }
@@ -52,14 +54,18 @@ export async function getLibraryBook(userId: string, bookId: string): Promise<Li
 /**
  * Updates the reading progress for a book in the user's library.
  */
-export async function updateBookProgress(userId: string, bookId: string, progress: number): Promise<void> {
-  if (progress < 0 || progress > 100) {
-    console.warn("Progress must be between 0 and 100.");
+export async function updateBookProgress(userId: string, bookId: string, progress: { percentage: number; lastReadSector: number }): Promise<void> {
+  const { percentage, lastReadSector } = progress;
+  if (percentage < 0 || percentage > 100) {
+    console.warn("Progress percentage must be between 0 and 100.");
     return;
   }
   const bookRef = doc(db, 'users', userId, 'library', bookId);
   // Use updateDoc to avoid overwriting the whole document
-  await updateDoc(bookRef, { progress });
+  await updateDoc(bookRef, { 
+      progress: percentage,
+      lastReadSector: lastReadSector,
+  });
 }
 
 
