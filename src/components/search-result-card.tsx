@@ -2,6 +2,7 @@
 import Link from "next/link";
 import type { SearchResult } from "@/adapters/sourceManager";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Progress } from "./ui/progress";
 
 function createBookQuery(book: SearchResult): string {
   const params = new URLSearchParams();
@@ -37,7 +38,7 @@ function createBookQuery(book: SearchResult): string {
   return params.toString();
 }
 
-export function SearchResultCard({ book }: { book: SearchResult }) {
+export function SearchResultCard({ book }: { book: SearchResult & { progress?: number } }) {
   const href = `/read?${createBookQuery(book)}`;
 
   return (
@@ -55,10 +56,22 @@ export function SearchResultCard({ book }: { book: SearchResult }) {
             <p className="font-medium text-foreground truncate">{book.authors}</p>
           </div>
         </CardContent>
-        <CardFooter className="p-4 pt-0">
+        <CardFooter className="flex-col items-start p-4 pt-0">
           <p className="text-xs text-muted-foreground/80 w-full">
             <span className="text-accent/50">src:</span> {book.source}
           </p>
+           {book.progress !== undefined && book.progress > 0 && (
+            <div className="w-full mt-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>PROGRESS</span>
+                <span>{Math.round(book.progress)}%</span>
+              </div>
+              <Progress
+                value={book.progress}
+                className="h-1 bg-input [&>div]:bg-accent"
+              />
+            </div>
+          )}
         </CardFooter>
       </Card>
     </Link>

@@ -13,8 +13,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export function AppHeader() {
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 px-4 backdrop-blur-sm md:px-6">
       <SidebarTrigger className="md:hidden" />
@@ -38,7 +49,7 @@ export function AppHeader() {
             <Link href="/settings">Settings</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator className="bg-border/50" />
-          <DropdownMenuItem className="text-destructive focus:bg-destructive/20 focus:text-destructive">Logout</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:bg-destructive/20 focus:text-destructive">Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

@@ -6,6 +6,7 @@ import MainLayout from "@/components/layout/main-layout";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/context/theme-provider";
 import { ReaderSettingsProvider } from "@/context/reader-settings-provider";
+import { AuthProvider } from "@/context/auth-provider";
 
 const fontHeadline = Orbitron({
   subsets: ["latin"],
@@ -44,8 +45,10 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <ReaderSettingsProvider>
-            <MainLayout>{children}</MainLayout>
-            <Toaster />
+            <AuthProvider>
+              <MainLayout>{children}</MainLayout>
+              <Toaster />
+            </AuthProvider>
           </ReaderSettingsProvider>
         </ThemeProvider>
       </body>

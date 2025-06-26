@@ -1,13 +1,2 @@
-export type Book = {
-  id: string;
-  slug: string;
-  title: string;
-  author: string;
-  source: string;
-  progress: number;
-  coverUrl: string;
-  lastAccessed: string;
-  genre: string;
-  chapters: { title: string; read: boolean }[];
-  content: string;
-};
+// This file contained types for an old, unused feature and has been disabled to prevent routing errors.
+// Its contents have been removed.

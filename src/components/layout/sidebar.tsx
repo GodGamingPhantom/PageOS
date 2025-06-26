@@ -18,6 +18,8 @@ import {
   Power,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 const menuItems = [
   { href: "/", label: "System Feed", icon: Home },
@@ -28,6 +30,14 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -62,7 +72,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="mt-auto border-t border-border/50 p-4">
-        <Button variant="ghost" className="w-full justify-start gap-2 p-2">
+        <Button variant="ghost" className="w-full justify-start gap-2 p-2" onClick={handleSignOut}>
           <Power className="h-4 w-4 text-destructive" />
           <span className="group-data-[collapsible=icon]:hidden">Logout</span>
         </Button>
