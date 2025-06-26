@@ -9,7 +9,7 @@ export type MappedManybooksBook = {
 };
 
 async function getDOM(url: string): Promise<Document> {
-    const res = await fetch(url);
+    const res = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
     if (!res.ok) {
         throw new Error(`Failed to fetch HTML from ${url}`);
     }
@@ -22,7 +22,8 @@ export async function fetchManyBooks(query: string): Promise<MappedManybooksBook
   if (!query) return [];
 
   try {
-    const doc = await getDOM(`/api/manybooks?search=${encodeURIComponent(query)}`);
+    const searchUrl = `https://manybooks.net/search-book?search=${encodeURIComponent(query)}`;
+    const doc = await getDOM(searchUrl);
     const bookElements = Array.from(doc.querySelectorAll('article.book-teaser'));
 
     return bookElements.map(el => {
@@ -38,7 +39,7 @@ export async function fetchManyBooks(query: string): Promise<MappedManybooksBook
         id: path,
         title: titleElement?.textContent?.trim() || 'Untitled',
         authors: authorElement?.textContent?.trim() || 'Unknown',
-        cover: cover,
+        cover: cover ? new URL(cover, 'https://manybooks.net').toString() : null,
         source: 'manybooks'
       };
     }).filter(book => book.id); // Filter out any entries that failed to parse a path
@@ -51,7 +52,8 @@ export async function fetchManyBooks(query: string): Promise<MappedManybooksBook
 export async function fetchManybooksContent(bookPath: string): Promise<string> {
     try {
         // First, fetch the main book page to find the download link
-        const bookPageDoc = await getDOM(`/api/manybooks?path=${encodeURIComponent(bookPath)}`);
+        const bookPageUrl = `https://manybooks.net${bookPath.startsWith('/') ? bookPath : `/${bookPath}`}`;
+        const bookPageDoc = await getDOM(bookPageUrl);
         
         // Find the "Plain Text" download link.
         const downloadLinks = Array.from(bookPageDoc.querySelectorAll('a.dropdown-item'));
@@ -67,8 +69,11 @@ export async function fetchManybooksContent(bookPath: string): Promise<string> {
             throw new Error('Could not find a readable download format (Plain Text) for this book on ManyBooks.');
         }
 
+        // downloadPath can be relative, so construct an absolute URL
+        const downloadUrl = new URL(downloadPath, bookPageUrl).toString();
+
         // Now fetch the text content from the download path
-        const contentRes = await fetch(`/api/manybooks?path=${encodeURIComponent(downloadPath)}`);
+        const contentRes = await fetch(`/api/proxy?url=${encodeURIComponent(downloadUrl)}`);
         if (!contentRes.ok) {
             throw new Error(`Failed to fetch book content from download path: ${downloadPath}`);
         }

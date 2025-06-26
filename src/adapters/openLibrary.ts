@@ -22,7 +22,8 @@ export type MappedOpenLibraryBook = {
 
 export async function fetchOpenLibrary(query: string): Promise<MappedOpenLibraryBook[]> {
   if (!query) return [];
-  const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=20`);
+  const apiUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=20`;
+  const res = await fetch(`/api/proxy?url=${encodeURIComponent(apiUrl)}`);
   if (!res.ok) {
     console.error('Failed to fetch from Open Library:', res.statusText);
     return [];

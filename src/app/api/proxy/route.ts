@@ -6,6 +6,7 @@ const ALLOWED_DOMAINS = [
   'openlibrary.org',
   'en.wikisource.org',
   'gutendex.com',
+  'manybooks.net',
 ];
 
 export async function GET(request: NextRequest) {
