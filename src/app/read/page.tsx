@@ -5,11 +5,10 @@ import { useEffect, useState, Suspense, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
-import { useReaderSettings } from '@/context/reader-settings-provider';
 
 const SECTOR_SIZE = 4; // 4 paragraphs per sector
 
@@ -148,7 +147,7 @@ function Reader() {
         const bookId = generateBookId(book);
         const percentage = sectors.length > 0 ? ((activeSector + 1) / sectors.length) * 100 : 0;
         updateBookProgress(user.uid, bookId, {
-            percentage: Math.min(100, percentage),
+            progress: Math.min(100, percentage),
             lastReadSector: activeSector
         }).catch(e => console.error("Failed to save progress", e));
     }, 1500);
@@ -234,37 +233,35 @@ function Reader() {
     if (!currentSector) return <div className="flex flex-1 justify-center items-center"><p>No content to display.</p></div>;
     
     return (
-        <AnimatePresence initial={false} custom={direction}>
-            <motion.div
-                key={activeSector}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 },
-                }}
-                className="absolute inset-0 p-6 sm:p-8 md:p-12"
-            >
-                <div className="mx-auto w-full max-w-4xl h-full flex flex-col justify-center">
-                    <div>
-                      <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                          ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-                      </div>
-                      <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                          {currentSector.map((para, pi) => (
-                              <p key={pi} className="sector-paragraph">{para.trim()}</p>
-                          ))}
-                      </div>
-                      <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                          MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-                      </div>
-                    </div>
-                </div>
-            </motion.div>
-        </AnimatePresence>
+      <AnimatePresence initial={false} custom={direction}>
+        <motion.div
+          key={activeSector}
+          custom={direction}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{
+            x: { type: "spring", stiffness: 300, damping: 30 },
+            opacity: { duration: 0.2 },
+          }}
+          className="absolute inset-0 grid place-items-center p-4 sm:p-6 md:p-8"
+        >
+          <div className="w-full max-w-4xl">
+            <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+            </div>
+            <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                {currentSector.map((para, pi) => (
+                    <p key={pi} className="sector-paragraph">{para.trim()}</p>
+                ))}
+            </div>
+            <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     );
   };
 
