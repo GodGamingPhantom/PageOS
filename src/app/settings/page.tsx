@@ -45,7 +45,7 @@ const SourceStatus = ({ status }: { status: Status }) => {
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { autoScroll, setAutoScroll, sourceSettings, toggleSource } = useReaderSettings();
+  const { autoScroll, setAutoScroll, sourceSettings, toggleSource, showBootAnimation, setShowBootAnimation } = useReaderSettings();
   
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, Status>>({});
 
@@ -133,6 +133,17 @@ export default function SettingsPage() {
                   id="theme-paper" 
                   checked={theme === 'light'}
                   onCheckedChange={(checked) => checked && setTheme('light')}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-md border border-border/50 p-4">
+                <Label htmlFor="boot-animation" className="flex flex-col gap-1 cursor-pointer">
+                  <span>Show boot animation</span>
+                  <span className="font-normal text-muted-foreground">Play animation on startup.</span>
+                </Label>
+                <Switch 
+                  id="boot-animation" 
+                  checked={showBootAnimation}
+                  onCheckedChange={setShowBootAnimation}
                 />
               </div>
             </CardContent>

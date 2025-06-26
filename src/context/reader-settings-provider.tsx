@@ -10,6 +10,8 @@ type ReaderSettings = {
   setAutoScroll: (value: boolean) => void;
   sourceSettings: SourceSettings;
   toggleSource: (sourceKey: SourceKey) => void;
+  showBootAnimation: boolean;
+  setShowBootAnimation: (value: boolean) => void;
 };
 
 const ReaderSettingsContext = createContext<ReaderSettings | undefined>(undefined);
@@ -25,6 +27,7 @@ const defaultSourceSettings: SourceSettings = {
 export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
   const [autoScroll, setAutoScroll] = useState(false);
   const [sourceSettings, setSourceSettings] = useState<SourceSettings>(defaultSourceSettings);
+  const [showBootAnimation, setShowBootAnimation] = useState(true);
 
   const handleSetAutoScroll = useCallback((value: boolean) => {
     try {
@@ -35,6 +38,15 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
     setAutoScroll(value);
   }, []);
   
+  const handleSetShowBootAnimation = useCallback((value: boolean) => {
+    try {
+      localStorage.setItem('pageos-show-boot-animation', JSON.stringify(value));
+    } catch (error) {
+      console.warn(`Error setting boot animation setting in localStorage: ${error}`);
+    }
+    setShowBootAnimation(value);
+  }, []);
+
   const toggleSource = useCallback((sourceKey: SourceKey) => {
     setSourceSettings(prev => {
       const newSettings = { ...prev, [sourceKey]: !prev[sourceKey] };
@@ -57,6 +69,10 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
       if (storedSources) {
         setSourceSettings(JSON.parse(storedSources));
       }
+      const storedBootAnimation = localStorage.getItem('pageos-show-boot-animation');
+      if (storedBootAnimation !== null) {
+        setShowBootAnimation(JSON.parse(storedBootAnimation));
+      }
 
     } catch (error) {
       console.warn(`Error reading settings from localStorage: ${error}`);
@@ -69,6 +85,8 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
     setAutoScroll: handleSetAutoScroll,
     sourceSettings,
     toggleSource,
+    showBootAnimation,
+    setShowBootAnimation: handleSetShowBootAnimation,
   };
 
   return (
