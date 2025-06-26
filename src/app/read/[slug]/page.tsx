@@ -1,6 +1,6 @@
 
-import { redirect } from 'next/navigation';
-
 export default function OldReaderRedirectPage() {
-  redirect('/');
+  // This page is not currently used and was causing a redirect.
+  // Returning null makes it inactive and prevents potential routing conflicts.
+  return null;
 }
