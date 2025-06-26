@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RefreshCw, CheckCircle, XCircle, AlertTriangle, LoaderCircle } from "lucide-react";
 import { useTheme } from "@/context/theme-provider";
-import { useReaderSettings } from "@/context/reader-settings-provider";
+import { useReaderSettings, ReadingMode } from "@/context/reader-settings-provider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type Status = 'Online' | 'Offline' | 'Error' | 'Checking';
 
@@ -45,7 +46,7 @@ const SourceStatus = ({ status }: { status: Status }) => {
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { autoScroll, setAutoScroll, sourceSettings, toggleSource, showBootAnimation, setShowBootAnimation } = useReaderSettings();
+  const { autoScroll, setAutoScroll, sourceSettings, toggleSource, showBootAnimation, setShowBootAnimation, readingMode, setReadingMode } = useReaderSettings();
   
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, Status>>({});
 
@@ -164,6 +165,24 @@ export default function SettingsPage() {
                   checked={autoScroll}
                   onCheckedChange={setAutoScroll}
                 />
+              </div>
+              <div className="rounded-md border border-border/50 p-4">
+                <Label className="text-base">Reading Mode</Label>
+                <p className="text-sm text-muted-foreground mb-4">Select how content is displayed.</p>
+                <RadioGroup
+                  value={readingMode}
+                  onValueChange={(value) => setReadingMode(value as ReadingMode)}
+                  className="flex flex-col sm:flex-row gap-4"
+                >
+                  <Label htmlFor="scroll" className="flex items-center gap-2 cursor-pointer">
+                    <RadioGroupItem value="scroll" id="scroll" />
+                    <span>Scroll Mode (Vertical)</span>
+                  </Label>
+                  <Label htmlFor="paged" className="flex items-center gap-2 cursor-pointer">
+                    <RadioGroupItem value="paged" id="paged" />
+                    <span>Paged Mode (Horizontal)</span>
+                  </Label>
+                </RadioGroup>
               </div>
             </CardContent>
           </Card>

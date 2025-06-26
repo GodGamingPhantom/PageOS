@@ -5,11 +5,12 @@ import { useEffect, useState, Suspense, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ScrollText, BookOpenCheck } from 'lucide-react';
 import { useReaderSettings } from '@/context/reader-settings-provider';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
+import { cn } from '@/lib/utils';
 
 const SECTOR_SIZE = 4; // 4 paragraphs per sector
 
@@ -45,11 +46,11 @@ function Reader() {
 
   const { user } = useAuth();
   const { toast } = useToast();
+  const { readingMode, setReadingMode } = useReaderSettings();
 
   const [libraryBook, setLibraryBook] = useState<LibraryBook | null>(null);
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(true);
   
-  // New state for S.E.C.T.O.R. system
   const [activeSector, setActiveSector] = useState(0);
 
   const isBookmarked = !!libraryBook;
@@ -64,6 +65,25 @@ function Reader() {
     return newSectors;
   }, [content]);
 
+  // Navigation logic
+  const goToSector = (index: number) => {
+    if (index < 0 || index >= sectors.length) return;
+
+    if (readingMode === 'scroll') {
+        const sectorElement = document.getElementById(`sector-${index}`);
+        sectorElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        const container = mainRef.current;
+        if (container) {
+            const targetScrollLeft = container.offsetWidth * index;
+            container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+        }
+    }
+  };
+
+  const goToNextSector = () => goToSector(activeSector + 1);
+  const goToPrevSector = () => goToSector(activeSector - 1);
+  
   // Load book content
   useEffect(() => {
     const parsedBook = parseBookFromParams(searchParams);
@@ -113,18 +133,14 @@ function Reader() {
 
   }, [user, book]);
 
-  // Auto-scroll to last read sector
+  // Auto-navigate to last read sector
   useEffect(() => {
     if (sectors.length > 0 && libraryBook?.lastReadSector) {
-        const sectorElement = document.getElementById(`sector-${libraryBook.lastReadSector}`);
-        if (sectorElement) {
-            // Using timeout to ensure DOM is fully ready
-            setTimeout(() => {
-                sectorElement.scrollIntoView({ behavior: 'auto', block: 'start' });
-            }, 100);
-        }
+        setTimeout(() => {
+            goToSector(libraryBook.lastReadSector);
+        }, 150);
     }
-  }, [sectors, libraryBook]);
+  }, [sectors, libraryBook, readingMode]);
 
   // Debounced progress update to Firebase
   useEffect(() => {
@@ -144,6 +160,7 @@ function Reader() {
 
   // Set up IntersectionObserver to track active sector
   useEffect(() => {
+    if (!mainRef.current) return;
     const observer = new IntersectionObserver(
         (entries) => {
             entries.forEach(entry => {
@@ -153,7 +170,7 @@ function Reader() {
                 }
             });
         },
-        { root: mainRef.current, threshold: 0.5 }
+        { root: mainRef.current, threshold: readingMode === 'paged' ? 0.8 : 0.5 }
     );
 
     const sectorElements = mainRef.current?.querySelectorAll('[data-sector-index]');
@@ -166,7 +183,7 @@ function Reader() {
             sectorElements.forEach(el => observer.unobserve(el));
         }
     };
-  }, [sectors]); // Re-run when sectors are ready
+  }, [sectors, readingMode]);
 
   const handleToggleBookmark = async () => {
     if (!user || !book) {
@@ -230,7 +247,12 @@ function Reader() {
             key={index}
             id={`sector-${index}`}
             data-sector-index={index}
-            className="sector-frame group relative my-12 rounded-lg border border-border/20 p-4 md:p-6 bg-card/50 transition-shadow duration-300 hover:border-accent/50 hover:box-glow"
+            className={cn(
+              "sector-frame group relative transition-shadow duration-300",
+              readingMode === 'scroll'
+                ? "my-12 rounded-lg border border-border/20 p-4 md:p-6 bg-card/50 hover:border-accent/50 hover:box-glow"
+                : "h-full w-screen flex-shrink-0 snap-center flex flex-col justify-center p-8 md:p-16 lg:p-24"
+            )}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.05 }}
@@ -253,43 +275,58 @@ function Reader() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in">
-      <div className="flex-1 flex flex-col">
-        <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <span className="truncate">{`TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id || '...'}`}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Bookmark"
-              onClick={handleToggleBookmark}
-              disabled={isBookmarkLoading || !user}
-            >
-              {isBookmarkLoading ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-              ) : (
-                <Bookmark className={`h-4 w-4 transition-colors ${isBookmarked ? 'fill-accent text-accent' : ''}`} />
-              )}
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="Settings"><Settings className="h-4 w-4" /></Button>
-          </div>
-        </header>
+    <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col">
+      <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <span className="truncate">{`TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id || '...'}`}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => setReadingMode(readingMode === 'scroll' ? 'paged' : 'scroll')} aria-label="Toggle Reading Mode">
+             {readingMode === 'scroll' ? <ScrollText className="h-4 w-4" /> : <BookOpenCheck className="h-4 w-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Bookmark"
+            onClick={handleToggleBookmark}
+            disabled={isBookmarkLoading || !user}
+          >
+            {isBookmarkLoading ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <Bookmark className={`h-4 w-4 transition-colors ${isBookmarked ? 'fill-accent text-accent' : ''}`} />
+            )}
+          </Button>
+          <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => router.push('/settings')}><Settings className="h-4 w-4" /></Button>
+        </div>
+      </header>
 
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-8 md:px-16 lg:px-24 xl:px-32 2xl:px-48 flex flex-col items-center">
-            <div className="w-full max-w-3xl">
-                <div className="my-8 font-body text-sm text-accent/80 space-y-1">
-                    <p>&gt;&gt;&gt; Transmission Link Established: "{book?.title || '...'}"</p>
+      <main ref={mainRef} className={cn(
+          "flex-1 relative",
+          readingMode === 'scroll' 
+            ? "overflow-y-auto" 
+            : "overflow-x-auto overflow-y-hidden flex flex-row h-full snap-x snap-mandatory"
+      )}>
+            <div className="absolute left-0 top-0 h-full w-1/4 z-20" onClick={goToPrevSector} />
+            <div className="absolute right-0 top-0 h-full w-1/4 z-20" onClick={goToNextSector} />
+          
+            <div className={cn(
+              readingMode === 'scroll' ? 'w-full max-w-3xl mx-auto' : 'flex h-full'
+            )}>
+              {readingMode === 'scroll' && book && (
+                <div className="my-8 font-body text-sm text-accent/80 space-y-1 px-4">
+                    <p>&gt;&gt;&gt; Transmission Link Established: "{book?.title}"</p>
                     <p>&gt;&gt;&gt; Rendering S.E.C.T.O.R. stream...</p>
                 </div>
+              )}
+              <div className={cn(readingMode === 'paged' && "flex h-full")}>
                 {renderContent()}
+              </div>
             </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 }
