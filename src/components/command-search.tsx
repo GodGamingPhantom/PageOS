@@ -18,10 +18,7 @@ interface CommandSearchProps {
 
 const ALL_SOURCES: { key: SourceKey; name: string }[] = [
   { key: 'gutendex', name: 'Project Gutenberg' },
-  { key: 'standardEbooks', name: 'Standard Ebooks' },
   { key: 'openLibrary', name: 'Open Library' },
-  { key: 'wikisource', name: 'Wikisource' },
-  { key: 'manybooks', name: 'ManyBooks' },
 ];
 
 export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {

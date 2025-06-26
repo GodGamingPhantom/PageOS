@@ -23,18 +23,6 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'standardebooks.org',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'manybooks.net',
-        port: '',
-        pathname: '/**',
-      },
     ],
   },
 };

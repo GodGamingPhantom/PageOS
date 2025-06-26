@@ -3,8 +3,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import type { SourceKey } from '@/adapters/sourceManager';
 
-export type SourceSettings = Record<SourceKey, boolean>;
-export type ReadingMode = 'scroll' | 'paged';
+export type SourceSettings = Partial<Record<SourceKey, boolean>>;
 
 type ReaderSettings = {
   autoScroll: boolean;
@@ -13,25 +12,19 @@ type ReaderSettings = {
   toggleSource: (sourceKey: SourceKey) => void;
   showBootAnimation: boolean;
   setShowBootAnimation: (value: boolean) => void;
-  readingMode: ReadingMode;
-  setReadingMode: (mode: ReadingMode) => void;
 };
 
 const ReaderSettingsContext = createContext<ReaderSettings | undefined>(undefined);
 
 const defaultSourceSettings: SourceSettings = {
   gutendex: true,
-  standardEbooks: true,
   openLibrary: true,
-  wikisource: true,
-  manybooks: true,
 };
 
 export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
   const [autoScroll, setAutoScroll] = useState(false);
   const [sourceSettings, setSourceSettings] = useState<SourceSettings>(defaultSourceSettings);
   const [showBootAnimation, setShowBootAnimation] = useState(true);
-  const [readingMode, setReadingMode] = useState<ReadingMode>('scroll');
 
   const handleSetAutoScroll = useCallback((value: boolean) => {
     try {
@@ -63,15 +56,6 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const handleSetReadingMode = useCallback((mode: ReadingMode) => {
-    try {
-      localStorage.setItem('pageos-reading-mode', mode);
-    } catch (error) {
-      console.warn(`Error setting reading mode in localStorage: ${error}`);
-    }
-    setReadingMode(mode);
-  }, []);
-
   useEffect(() => {
     try {
       const storedAutoScroll = localStorage.getItem('pageos-autoscroll');
@@ -85,10 +69,6 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
       const storedBootAnimation = localStorage.getItem('pageos-show-boot-animation');
       if (storedBootAnimation !== null) {
         setShowBootAnimation(JSON.parse(storedBootAnimation));
-      }
-      const storedReadingMode = localStorage.getItem('pageos-reading-mode') as ReadingMode | null;
-      if (storedReadingMode) {
-        setReadingMode(storedReadingMode);
       }
 
     } catch (error) {
@@ -104,8 +84,6 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
     toggleSource,
     showBootAnimation,
     setShowBootAnimation: handleSetShowBootAnimation,
-    readingMode,
-    setReadingMode: handleSetReadingMode,
   };
 
   return (

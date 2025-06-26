@@ -9,17 +9,13 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RefreshCw, CheckCircle, XCircle, AlertTriangle, LoaderCircle } from "lucide-react";
 import { useTheme } from "@/context/theme-provider";
-import { useReaderSettings, ReadingMode } from "@/context/reader-settings-provider";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useReaderSettings } from "@/context/reader-settings-provider";
 
 type Status = 'Online' | 'Offline' | 'Error' | 'Checking';
 
 const ALL_SOURCES = [
   { key: 'gutendex', name: 'Project Gutenberg', checkUrl: 'https://gutendex.com/books/?search=a' },
-  { key: 'standardEbooks', name: 'Standard Ebooks', checkUrl: 'https://standardebooks.org/api/v1/ebooks/?query=a' },
   { key: 'openLibrary', name: 'Open Library', checkUrl: 'https://openlibrary.org/search.json?q=a&limit=1' },
-  { key: 'wikisource', name: 'Wikisource', checkUrl: 'https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=a&format=json&origin=*' },
-  { key: 'manybooks', name: 'ManyBooks', checkUrl: 'https://manybooks.net/search-book?search=a' },
 ];
 
 
@@ -46,7 +42,7 @@ const SourceStatus = ({ status }: { status: Status }) => {
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { autoScroll, setAutoScroll, sourceSettings, toggleSource, showBootAnimation, setShowBootAnimation, readingMode, setReadingMode } = useReaderSettings();
+  const { autoScroll, setAutoScroll, sourceSettings, toggleSource, showBootAnimation, setShowBootAnimation } = useReaderSettings();
   
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, Status>>({});
 
@@ -166,24 +162,6 @@ export default function SettingsPage() {
                   onCheckedChange={setAutoScroll}
                 />
               </div>
-              <div className="rounded-md border border-border/50 p-4">
-                <Label className="text-base">Reading Mode</Label>
-                <p className="text-sm text-muted-foreground mb-4">Select how content is displayed.</p>
-                <RadioGroup
-                  value={readingMode}
-                  onValueChange={(value) => setReadingMode(value as ReadingMode)}
-                  className="flex flex-col sm:flex-row gap-4"
-                >
-                  <Label htmlFor="scroll" className="flex items-center gap-2 cursor-pointer">
-                    <RadioGroupItem value="scroll" id="scroll" />
-                    <span>Scroll Mode (Vertical)</span>
-                  </Label>
-                  <Label htmlFor="paged" className="flex items-center gap-2 cursor-pointer">
-                    <RadioGroupItem value="paged" id="paged" />
-                    <span>Paged Mode (Horizontal)</span>
-                  </Label>
-                </RadioGroup>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -206,8 +184,8 @@ export default function SettingsPage() {
                      <SourceStatus status={sourceStatuses[source.name] || 'Checking'} />
                    </div>
                    <Switch
-                      checked={sourceSettings[source.key] ?? true}
-                      onCheckedChange={() => toggleSource(source.key)}
+                      checked={sourceSettings[source.key as keyof typeof sourceSettings] ?? true}
+                      onCheckedChange={() => toggleSource(source.key as any)}
                       aria-label={`Toggle ${source.name}`}
                    />
                  </div>

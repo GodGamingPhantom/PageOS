@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const ALLOWED_DOMAINS = [
   'www.gutenberg.org',
-  'standardebooks.org',
   'openlibrary.org',
-  'en.wikisource.org',
   'gutendex.com',
-  'manybooks.net',
 ];
 
 export async function GET(request: NextRequest) {

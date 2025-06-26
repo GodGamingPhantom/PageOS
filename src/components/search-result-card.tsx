@@ -21,19 +21,6 @@ function createBookQuery(book: SearchResult): string {
         params.set("cover", book.cover);
       }
       break;
-    case "standardEbooks":
-      if (book.epub) {
-        params.set("epub", book.epub);
-      }
-      break;
-    case "wikisource":
-      params.set("pageid", String(book.pageid));
-      break;
-    case "manybooks":
-      if (book.cover) {
-          params.set("cover", book.cover);
-      }
-      break;
   }
   return params.toString();
 }

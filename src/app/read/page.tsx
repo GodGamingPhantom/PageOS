@@ -2,12 +2,11 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState, Suspense, useRef, useMemo } from 'react';
+import { useEffect, useState, Suspense, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ScrollText, BookOpenCheck, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useReaderSettings } from '@/context/reader-settings-provider';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
@@ -28,30 +27,11 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
 
     if (book.source === 'gutendex' && bookData.formats) (book as any).formats = JSON.parse(bookData.formats);
     else if (book.source === 'openLibrary' && bookData.edition) (book as any).edition = bookData.edition;
-    else if (book.source === 'standardEbooks' && bookData.epub) (book as any).epub = bookData.epub;
-    else if (book.source === 'wikisource' && bookData.pageid) (book as any).pageid = parseInt(bookData.pageid);
-    else if (book.source === 'manybooks' && bookData.cover) (book as any).cover = bookData.cover;
 
     return book as SearchResult;
 }
 
-const ReaderControls = ({ onPrev, onNext, isFirst, isLast, readingMode }: { onPrev: () => void, onNext: () => void, isFirst: boolean, isLast: boolean, readingMode: 'scroll' | 'paged' }) => {
-  const commonButtonClasses = "fixed z-30 h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0 disabled:pointer-events-none";
-
-  if (readingMode === 'paged') {
-    return (
-      <>
-        <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className={cn(commonButtonClasses, "left-4 top-1/2 -translate-y-1/2")}>
-          <ChevronLeft className="h-6 w-6" />
-        </Button>
-        <Button onClick={onNext} disabled={isLast} variant="ghost" size="icon" className={cn(commonButtonClasses, "right-4 top-1/2 -translate-y-1/2")}>
-          <ChevronRight className="h-6 w-6" />
-        </Button>
-      </>
-    );
-  }
-
-  // scroll mode
+const ReaderControls = ({ onPrev, onNext, isFirst, isLast }: { onPrev: () => void, onNext: () => void, isFirst: boolean, isLast: boolean }) => {
   return (
     <div className="fixed bottom-4 right-4 z-30 flex flex-col gap-2">
       <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
@@ -69,7 +49,6 @@ function Reader() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  const mainRef = useRef<HTMLElement>(null);
   const [book, setBook] = useState<SearchResult | null>(null);
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,7 +56,6 @@ function Reader() {
   
   const { user } = useAuth();
   const { toast } = useToast();
-  const { readingMode, setReadingMode } = useReaderSettings();
   
   const [libraryBook, setLibraryBook] = useState<LibraryBook | null>(null);
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(true);
@@ -219,20 +197,17 @@ function Reader() {
   
   const variants = {
     enter: (direction: number) => ({
-      x: readingMode === 'paged' ? (direction > 0 ? '100%' : '-100%') : 0,
-      y: readingMode === 'scroll' ? (direction > 0 ? '100%' : '-100%') : 0,
+      y: direction > 0 ? '100%' : '-100%',
       opacity: 0,
     }),
     center: {
       zIndex: 1,
-      x: 0,
       y: 0,
       opacity: 1,
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      x: readingMode === 'paged' ? (direction < 0 ? '100%' : '-100%') : 0,
-      y: readingMode === 'scroll' ? (direction < 0 ? '100%' : '-100%') : 0,
+      y: direction < 0 ? '100%' : '-100%',
       opacity: 0,
     }),
   };
@@ -269,7 +244,6 @@ function Reader() {
                 animate="center"
                 exit="exit"
                 transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
                     y: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 },
                 }}
@@ -303,9 +277,6 @@ function Reader() {
           <span className="truncate">{`TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id || '...'}`}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setReadingMode(readingMode === 'scroll' ? 'paged' : 'scroll')} aria-label="Toggle Reading Mode">
-             {readingMode === 'scroll' ? <ScrollText className="h-4 w-4" /> : <BookOpenCheck className="h-4 w-4" />}
-          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -323,12 +294,11 @@ function Reader() {
         </div>
       </header>
 
-      <main ref={mainRef} className="flex-1 relative overflow-hidden">
+      <main className="flex-1 relative overflow-hidden">
         {renderContent()}
         <ReaderControls
           onPrev={goToPrevSector}
           onNext={goToNextSector}
-          readingMode={readingMode}
           isFirst={activeSector === 0}
           isLast={activeSector === sectors.length - 1}
         />
