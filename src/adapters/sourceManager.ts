@@ -7,28 +7,41 @@ import * as openLibrary from './openLibrary';
 import type { MappedOpenLibraryBook } from './openLibrary';
 import * as wikisource from './wikisource';
 import type { MappedWikisourceBook } from './wikisource';
-import * as manybooks from './manybooks';
+// Import the type only, not the implementation
 import type { MappedManybooksBook } from './manybooks';
 
+// The SearchResult union type can safely include the client-only type
 export type SearchResult = MappedGutenbergBook | MappedStandardEbook | MappedOpenLibraryBook | MappedWikisourceBook | MappedManybooksBook;
 
+// This object contains only server-safe fetchers
 const sourceFetchers = {
   gutendex: gutendex.fetchGutenbergBooks,
   standardEbooks: standardEbooks.fetchStandardEbooks,
   openLibrary: openLibrary.fetchOpenLibrary,
   wikisource: wikisource.fetchWikisource,
-  manybooks: manybooks.fetchManyBooks,
 };
 
-export type SourceKey = keyof typeof sourceFetchers;
+// Manually define the SourceKey to include the dynamically loaded one
+export type SourceKey = keyof typeof sourceFetchers | 'manybooks';
 
 export async function searchBooksAcrossSources(query: string, enabledSources?: SourceKey[]): Promise<SearchResult[]> {
   if (!query) return [];
 
-  const sourcesToSearch: SourceKey[] = enabledSources ?? Object.keys(sourceFetchers) as SourceKey[];
+  const allSourceKeys: SourceKey[] = [...Object.keys(sourceFetchers), 'manybooks'] as SourceKey[];
+  const sourcesToSearch: SourceKey[] = enabledSources ?? allSourceKeys;
 
   const promises = sourcesToSearch.map(sourceKey => {
-    const fetcher = sourceFetchers[sourceKey];
+    // Handle the client-side 'manybooks' source dynamically
+    if (sourceKey === 'manybooks') {
+      // This will only run on the client, where DOMParser is available
+      return import('./manybooks').then(mb => mb.fetchManyBooks(query)).catch(e => {
+        console.error(`${sourceKey} search failed:`, e);
+        return [];
+      });
+    }
+
+    // Handle server-safe sources
+    const fetcher = sourceFetchers[sourceKey as keyof typeof sourceFetchers];
     if (!fetcher) {
         console.warn(`No fetcher found for source: ${sourceKey}`);
         return Promise.resolve([]);
@@ -56,7 +69,9 @@ export async function fetchBookContent(book: SearchResult): Promise<string | Blo
     case 'wikisource': 
       return await wikisource.fetchWikisourceContent(book.pageid);
     case 'manybooks':
-      return await manybooks.fetchManybooksContent(book.id);
+      // Dynamically import the client-side content fetcher
+      const { fetchManybooksContent } = await import('./manybooks');
+      return await fetchManybooksContent(book.id);
     default: 
       const _exhaustiveCheck: never = book;
       throw new Error('Unknown source');

@@ -7,18 +7,18 @@ runConfig:
   maxInstances: 1
 env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: "YOUR_API_KEY_HERE"
+    value: "AIzaSyDcetZGa7-_c28lbdZ-ZqvAbXaIQ_mEpwQ"
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: "YOUR_AUTH_DOMAIN_HERE"
+    value: "pageos.firebaseapp.com"
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: "YOUR_PROJECT_ID_HERE"
+    value: "pageos"
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: "YOUR_STORAGE_BUCKET_HERE"
+    value: "pageos.firebasestorage.app"
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "YOUR_MESSAGING_SENDER_ID_HERE"
+    value: "588283938271"
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: "YOUR_APP_ID_HERE"
+    value: "1:588283938271:web:b739830deb89e91765f06a"
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
-    value: "YOUR_MEASUREMENT_ID_HERE"
+    value: "G-58C85TP1KC"
   - variable: GOOGLE_API_KEY
     value: "YOUR_GOOGLE_AI_KEY_HERE"

@@ -18,7 +18,7 @@ const ALL_SOURCES = [
   { key: 'standardEbooks', name: 'Standard Ebooks', checkUrl: 'https://standardebooks.org/api/v1/ebooks/?query=a' },
   { key: 'openLibrary', name: 'Open Library', checkUrl: 'https://openlibrary.org/search.json?q=a&limit=1' },
   { key: 'wikisource', name: 'Wikisource', checkUrl: 'https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=a&format=json&origin=*' },
-  { key: 'manybooks', name: 'ManyBooks', checkUrl: '/api/manybooks?search=a', direct: true },
+  { key: 'manybooks', name: 'ManyBooks', checkUrl: 'https://manybooks.net/search-book?search=a' },
 ];
 
 
@@ -66,9 +66,7 @@ export default function SettingsPage() {
     };
 
     const statusPromises = ALL_SOURCES.map(async (source) => {
-      const status = source.direct 
-        ? await check(source.checkUrl)
-        : await check(`/api/proxy?url=${encodeURIComponent(source.checkUrl)}`);
+      const status = await check(`/api/proxy?url=${encodeURIComponent(source.checkUrl)}`);
       return { name: source.name, status };
     });
 
@@ -196,7 +194,7 @@ export default function SettingsPage() {
                  </div>
               ))}
               <div className="pt-4">
-                <Label htmlFor="add-source" className="text-accent/80">&gt; IMPORT FROM NODE URL</Label>
+                <Label htmlFor="add-source" className="text-accent/80">> IMPORT FROM NODE URL</Label>
                 <div className="flex items-center gap-2 mt-2">
                     <Input 
                       id="add-source" 
