@@ -1,13 +1,13 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { CommandSearch } from "@/components/command-search";
 import type { SearchResult } from "@/adapters/sourceManager";
 import { SearchResultCard } from "@/components/search-result-card";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, SignalZero } from "lucide-react";
 import { fetchGutenbergBooks } from "@/adapters/gutendex";
 import { fetchOpenLibrary } from "@/adapters/openLibrary";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const shuffleArray = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -20,6 +20,7 @@ const shuffleArray = (array: any[]) => {
 export default function HomePage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [featuredBooks, setFeaturedBooks] = useState<SearchResult[]>([]);
   const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
 
@@ -29,12 +30,12 @@ export default function HomePage() {
       try {
         const [gutenbergBooks, openLibraryBooks] = await Promise.all([
           fetchGutenbergBooks(),
-          fetchOpenLibrary('classic literature') 
+          fetchOpenLibrary('classic literature'),
         ]);
-        
+
         const allBooks = [
-          ...gutenbergBooks.slice(0, 10), 
-          ...openLibraryBooks.slice(0, 10)
+          ...gutenbergBooks.slice(0, 10),
+          ...openLibraryBooks.slice(0, 10),
         ];
 
         setFeaturedBooks(shuffleArray(allBooks));
@@ -48,13 +49,21 @@ export default function HomePage() {
     loadFeaturedBooks();
   }, []);
 
+  const handleLoading = (loading: boolean) => {
+    setIsLoading(loading);
+    if (loading) {
+      setHasSearched(true);
+    }
+  };
 
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="flex justify-center items-center p-8">
           <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
-          <p className="ml-4 text-muted-foreground">Querying transmission nodes...</p>
+          <p className="ml-4 text-muted-foreground">
+            Querying transmission nodes...
+          </p>
         </div>
       );
     }
@@ -67,33 +76,67 @@ export default function HomePage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {searchResults.map((book, index) => (
-              <SearchResultCard key={`${book.source}-${book.id}-${index}`} book={book} />
+              <SearchResultCard
+                key={`${book.source}-${book.id}-${index}`}
+                book={book}
+              />
             ))}
           </div>
         </section>
       );
     }
-    
-    return (
+
+    if (hasSearched) {
+      return (
         <section>
-             <h2 className="font-headline text-lg text-accent/80 mb-4">
-                // FEATURED_LOGS from the Network
-            </h2>
-            {isFeaturedLoading ? (
-               <div className="flex justify-center items-center p-8">
-                <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
-                <p className="ml-4 text-muted-foreground">Loading recommendations...</p>
+          <h2 className="font-headline text-lg text-accent/80 mb-4 border-b border-dashed border-border pb-2">
+            // QUERY_RESULTS
+          </h2>
+          <Card className="border-border/50 bg-card text-center">
+            <CardHeader>
+              <div className="mx-auto bg-input rounded-full p-3 w-fit">
+                <SignalZero className="h-8 w-8 text-accent" />
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {featuredBooks.map((book, index) => (
-                      <SearchResultCard key={`${book.source}-${book.id}-${index}`} book={book} />
-                  ))}
-              </div>
-            )}
+            </CardHeader>
+            <CardContent>
+              <CardTitle className="font-headline text-lg text-accent/80">
+                QUERY_NEGATIVE
+              </CardTitle>
+              <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+                No data streams in the network match the provided signature. The
+                archive returned no records.
+              </p>
+            </CardContent>
+          </Card>
         </section>
-    )
-  }
+      );
+    }
+
+    return (
+      <section>
+        <h2 className="font-headline text-lg text-accent/80 mb-4">
+          // FEATURED_LOGS from the Network
+        </h2>
+        {isFeaturedLoading ? (
+          <div className="flex justify-center items-center p-8">
+            <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
+            <p className="ml-4 text-muted-foreground">
+              Loading recommendations...
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {featuredBooks.map((book, index) => (
+              <SearchResultCard
+                key={`${book.source}-${book.id}-${index}`}
+                book={book}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -104,10 +147,9 @@ export default function HomePage() {
         </p>
       </div>
 
-      <CommandSearch onResults={setSearchResults} onLoading={setIsLoading} />
+      <CommandSearch onResults={setSearchResults} onLoading={handleLoading} />
 
       {renderContent()}
-
     </div>
   );
 }
