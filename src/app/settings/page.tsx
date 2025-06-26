@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -154,12 +155,13 @@ export default function SettingsPage() {
                <div className="flex items-center justify-between rounded-md border border-border/50 p-4">
                 <Label htmlFor="mode-autoscroll" className="flex flex-col gap-1 cursor-pointer">
                   <span>Auto-scroll</span>
-                  <span className="font-normal text-muted-foreground">Automatically scroll content.</span>
+                  <span className="font-normal text-muted-foreground">Automatically scroll content. (Coming soon)</span>
                 </Label>
                 <Switch
                   id="mode-autoscroll"
                   checked={autoScroll}
                   onCheckedChange={setAutoScroll}
+                  disabled
                 />
               </div>
             </CardContent>

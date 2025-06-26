@@ -6,11 +6,10 @@ import { useEffect, useState, Suspense, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
-import { cn } from '@/lib/utils';
 
 const SECTOR_SIZE = 4; // 4 paragraphs per sector
 
@@ -33,13 +32,13 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
 
 const ReaderControls = ({ onPrev, onNext, isFirst, isLast }: { onPrev: () => void, onNext: () => void, isFirst: boolean, isLast: boolean }) => {
   return (
-    <div className="fixed bottom-4 right-4 z-30 flex flex-col gap-2">
-      <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
-        <ChevronUp className="h-6 w-6" />
-      </Button>
-      <Button onClick={onNext} disabled={isLast} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
-        <ChevronDown className="h-6 w-6" />
-      </Button>
+    <div className="fixed bottom-4 right-4 z-30 flex gap-2">
+        <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
+            <ChevronLeft className="h-6 w-6" />
+        </Button>
+        <Button onClick={onNext} disabled={isLast} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
+            <ChevronRight className="h-6 w-6" />
+        </Button>
     </div>
   );
 };
@@ -197,17 +196,17 @@ function Reader() {
   
   const variants = {
     enter: (direction: number) => ({
-      y: direction > 0 ? '100%' : '-100%',
+      x: direction > 0 ? '100%' : '-100%',
       opacity: 0,
     }),
     center: {
       zIndex: 1,
-      y: 0,
+      x: 0,
       opacity: 1,
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      y: direction < 0 ? '100%' : '-100%',
+      x: direction < 0 ? '100%' : '-100%',
       opacity: 0,
     }),
   };
@@ -244,7 +243,7 @@ function Reader() {
                 animate="center"
                 exit="exit"
                 transition={{
-                    y: { type: "spring", stiffness: 300, damping: 30 },
+                    x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 },
                 }}
                 className="absolute inset-0 p-8 md:p-16 lg:p-24 flex flex-col justify-center"
