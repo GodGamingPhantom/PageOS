@@ -249,6 +249,7 @@ function Reader() {
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={activeSector}
+          layout
           custom={direction}
           variants={variants}
           initial="enter"
@@ -258,13 +259,13 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="absolute inset-0 grid place-items-center"
+          className="w-full h-full flex items-center justify-center"
         >
-          <div className="w-full max-w-4xl p-4">
+          <div className="w-full max-w-4xl mx-auto">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
-            <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+            <div className="sector-body max-w-3xl w-full space-y-4 font-reader text-base leading-relaxed text-foreground/90 px-4 py-8">
                 {currentSector.map((para, pi) => (
                     <p key={pi} className="sector-paragraph">{para.trim()}</p>
                 ))}
@@ -305,11 +306,12 @@ function Reader() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 relative">
+      <main className="flex-1 relative flex flex-col justify-center items-center overflow-hidden">
+        <div className="relative w-full max-w-4xl h-full px-4 flex items-center justify-center">
           {renderContent()}
         </div>
-        <div className="flex-none py-4 flex justify-center relative z-10">
+
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
           <ReaderControls
             onPrev={goToPrevSector}
             onNext={goToNextSector}
