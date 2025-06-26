@@ -6,7 +6,7 @@ import { useEffect, useState, Suspense, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, Book, Monitor } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
@@ -30,11 +30,11 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
 
 const ReaderControls = ({ onPrev, onNext, isFirst, isLast }: { onPrev: () => void, onNext: () => void, isFirst: boolean, isLast: boolean }) => {
   return (
-    <div className="fixed bottom-4 right-4 z-30 flex gap-2">
-      <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
+    <div className="fixed bottom-4 right-1/2 translate-x-1/2 z-30 flex gap-4">
+      <Button onClick={onPrev} disabled={isFirst} variant="outline" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm border-border/50 disabled:opacity-50">
         <ChevronLeft className="h-6 w-6" />
       </Button>
-      <Button onClick={onNext} disabled={isLast} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
+      <Button onClick={onNext} disabled={isLast} variant="outline" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm border-border/50 disabled:opacity-50">
         <ChevronRight className="h-6 w-6" />
       </Button>
     </div>
@@ -66,7 +66,6 @@ function Reader() {
     if (!content) return [];
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
     const newSectors = [];
-    // Use a larger sector size for paged mode
     const SECTOR_SIZE = 4;
     for (let i = 0; i < paragraphs.length; i += SECTOR_SIZE) {
         newSectors.push(paragraphs.slice(i, i + SECTOR_SIZE));
@@ -74,7 +73,6 @@ function Reader() {
     return newSectors;
   }, [content]);
 
-  // Navigation logic
   const paginate = (newDirection: number) => {
     let newIndex = activeSector + newDirection;
     if (newIndex >= 0 && newIndex < sectors.length) {
@@ -86,7 +84,6 @@ function Reader() {
   const goToNextSector = () => paginate(1);
   const goToPrevSector = () => paginate(-1);
   
-  // Load book content
   useEffect(() => {
     const parsedBook = parseBookFromParams(searchParams);
     if (!parsedBook) {
@@ -119,7 +116,6 @@ function Reader() {
     loadContent();
   }, [searchParams]);
   
-  // Get bookmark status from Firebase
   useEffect(() => {
     if (!user || !book) {
         setLibraryBook(null);
@@ -140,7 +136,6 @@ function Reader() {
 
   }, [user, book, sectors.length]);
 
-  // Debounced progress update to Firebase
   useEffect(() => {
     if (!isBookmarked || !user || !book || sectors.length === 0) return;
 
@@ -246,9 +241,8 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="absolute inset-0 grid place-items-center p-4 sm:p-6 md:p-8"
+          className="w-full max-w-4xl p-4"
         >
-          <div className="w-full max-w-6xl">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
@@ -260,7 +254,6 @@ function Reader() {
             <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
                 MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
             </div>
-          </div>
         </motion.div>
       </AnimatePresence>
     );
@@ -293,7 +286,7 @@ function Reader() {
         </div>
       </header>
 
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 relative overflow-hidden flex items-center justify-center">
         {renderContent()}
         <ReaderControls
           onPrev={goToPrevSector}
