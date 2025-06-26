@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -16,10 +17,12 @@ import {
   Settings,
   User,
   Power,
+  LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useAuth } from "@/context/auth-provider";
 
 const menuItems = [
   { href: "/", label: "System Feed", icon: Home },
@@ -30,6 +33,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const handleSignOut = async () => {
     try {
@@ -72,10 +76,19 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="mt-auto border-t border-border/50 p-4">
-        <Button variant="ghost" className="w-full justify-start gap-2 p-2" onClick={handleSignOut}>
-          <Power className="h-4 w-4 text-destructive" />
-          <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-        </Button>
+        {user ? (
+            <Button variant="ghost" className="w-full justify-start gap-2 p-2" onClick={handleSignOut}>
+              <Power className="h-4 w-4 text-destructive" />
+              <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+            </Button>
+        ) : (
+          <Button variant="ghost" asChild className="w-full justify-start gap-2 p-2">
+            <Link href="/profile">
+              <LogIn className="h-4 w-4 text-accent" />
+              <span className="group-data-[collapsible=icon]:hidden">Login</span>
+            </Link>
+          </Button>
+        )}
       </SidebarFooter>
     </div>
   );

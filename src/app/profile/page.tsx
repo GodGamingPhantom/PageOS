@@ -1,3 +1,4 @@
+
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -29,7 +30,7 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-headline text-accent">USER_PROFILE</h1>
+        <h1 className="text-3xl font-headline text-accent">USER_PROFILE / LOGIN</h1>
         <p className="text-muted-foreground">Operator session logs and preferences.</p>
       </div>
 
