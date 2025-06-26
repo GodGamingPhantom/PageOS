@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Download, LogIn, LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/context/auth-provider";
 import { auth, googleProvider } from "@/lib/firebase";
-import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithPopup, signOut, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProfilePage() {
@@ -13,6 +13,7 @@ export default function ProfilePage() {
 
   const handleSignIn = async () => {
     try {
+      await setPersistence(auth, browserLocalPersistence);
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Error signing in with Google: ", error);
@@ -74,7 +75,7 @@ export default function ProfilePage() {
            <CardDescription>
             This feature is currently under development.
           </CardDescription>
-        </CardHeader>
+        </Header>
         <CardContent className="flex flex-col sm:flex-row gap-4">
           <Button variant="outline" className="border-border/50" disabled>
             <Download className="mr-2 h-4 w-4" /> EXPORT_PINS
