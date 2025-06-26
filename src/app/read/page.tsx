@@ -246,37 +246,35 @@ function Reader() {
     if (!currentSector) return <div className="flex-1 grid place-items-center"><p>No content to display.</p></div>;
     
     return (
-      <div className="flex-1 relative">
-        <AnimatePresence initial={false} custom={direction}>
-          <motion.div
-            key={activeSector}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
-              opacity: { duration: 0.2 },
-            }}
-            className="absolute inset-0 grid place-items-center"
-          >
-            <div className="w-full max-w-4xl p-4">
-              <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                  ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-              </div>
-              <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                  {currentSector.map((para, pi) => (
-                      <p key={pi} className="sector-paragraph">{para.trim()}</p>
-                  ))}
-              </div>
-              <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                  MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-              </div>
+      <AnimatePresence initial={false} custom={direction}>
+        <motion.div
+          key={activeSector}
+          custom={direction}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{
+            x: { type: "spring", stiffness: 300, damping: 30 },
+            opacity: { duration: 0.2 },
+          }}
+          className="absolute inset-0 grid place-items-center"
+        >
+          <div className="w-full max-w-4xl p-4">
+            <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+            <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                {currentSector.map((para, pi) => (
+                    <p key={pi} className="sector-paragraph">{para.trim()}</p>
+                ))}
+            </div>
+            <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     );
   };
 
@@ -308,8 +306,10 @@ function Reader() {
       </header>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        {renderContent()}
-        <div className="flex-none py-4 flex justify-center">
+        <div className="flex-1 relative">
+          {renderContent()}
+        </div>
+        <div className="flex-none py-4 flex justify-center relative z-10">
           <ReaderControls
             onPrev={goToPrevSector}
             onNext={goToNextSector}
