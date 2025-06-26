@@ -96,9 +96,6 @@ function Reader() {
   
   const goToNextSector = () => paginate(1);
   const goToPrevSector = () => paginate(-1);
-
-  const isFirst = activeSector === 0;
-  const isLast = !sectors.length || activeSector === sectors.length - 1;
   
   useEffect(() => {
     const parsedBook = parseBookFromParams(searchParams);
@@ -257,9 +254,9 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="absolute inset-0 grid place-items-center"
+          className="absolute inset-0 flex items-center justify-center p-4"
         >
-          <div className="w-full max-w-4xl px-4 md:px-8">
+          <div className="w-full max-w-4xl">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
@@ -305,15 +302,15 @@ function Reader() {
       </header>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-grow relative">
+        <div className="flex-1 relative">
           {renderContent()}
         </div>
-        <div className="py-4">
+        <div className="flex-none py-4">
           <ReaderControls
             onPrev={goToPrevSector}
             onNext={goToNextSector}
-            isFirst={isFirst}
-            isLast={isLast}
+            isFirst={activeSector === 0}
+            isLast={!sectors.length || activeSector === sectors.length - 1}
           />
         </div>
       </main>
