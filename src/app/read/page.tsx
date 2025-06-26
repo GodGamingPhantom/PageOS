@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -6,10 +5,11 @@ import { useEffect, useState, Suspense, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
+import { useReaderSettings } from '@/context/reader-settings-provider';
 
 const SECTOR_SIZE = 4; // 4 paragraphs per sector
 
@@ -33,12 +33,12 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
 const ReaderControls = ({ onPrev, onNext, isFirst, isLast }: { onPrev: () => void, onNext: () => void, isFirst: boolean, isLast: boolean }) => {
   return (
     <div className="fixed bottom-4 right-4 z-30 flex gap-2">
-        <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
-            <ChevronLeft className="h-6 w-6" />
-        </Button>
-        <Button onClick={onNext} disabled={isLast} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
-            <ChevronRight className="h-6 w-6" />
-        </Button>
+      <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
+        <ChevronLeft className="h-6 w-6" />
+      </Button>
+      <Button onClick={onNext} disabled={isLast} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
+        <ChevronRight className="h-6 w-6" />
+      </Button>
     </div>
   );
 };
@@ -246,19 +246,21 @@ function Reader() {
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 },
                 }}
-                className="absolute inset-0 p-6 sm:p-8 md:p-12 flex flex-col justify-center items-center"
+                className="absolute inset-0 p-6 sm:p-8 md:p-12"
             >
-                <div className="w-full max-w-7xl">
-                    <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                        ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-                    </div>
-                    <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                        {currentSector.map((para, pi) => (
-                            <p key={pi} className="sector-paragraph">{para.trim()}</p>
-                        ))}
-                    </div>
-                    <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                        MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+                <div className="mx-auto w-full max-w-4xl h-full flex flex-col justify-center">
+                    <div>
+                      <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                          ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                      </div>
+                      <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                          {currentSector.map((para, pi) => (
+                              <p key={pi} className="sector-paragraph">{para.trim()}</p>
+                          ))}
+                      </div>
+                      <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                          MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+                      </div>
                     </div>
                 </div>
             </motion.div>
