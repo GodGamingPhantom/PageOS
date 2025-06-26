@@ -19,15 +19,20 @@ export async function searchStandardEbooks(query: string): Promise<MappedStandar
 
   return entries.map(entry => {
     const titleLink = entry.querySelector('a') as HTMLAnchorElement;
-    const author = entry.querySelector('p.author')?.textContent?.trim() || 'Unknown';
-    const href = titleLink?.getAttribute('href') || '';
-    const slug = href.replace('/ebooks/', '');
+    if (!titleLink) return null;
 
-    if (!slug || !titleLink?.textContent) return null;
+    const author = entry.querySelector('p.author')?.textContent?.trim() || 'Unknown';
+    const href = titleLink.getAttribute('href') || '';
+    const slug = href.replace('/ebooks/', '');
+    
+    // This is the fix. The title is in the first <p> tag inside the link.
+    const title = titleLink.querySelector('p')?.textContent?.trim();
+
+    if (!slug || !title) return null;
 
     return {
       id: `standardEbooks_${slug.replace(/\//g, '_')}`,
-      title: titleLink.textContent.trim(),
+      title: title,
       authors: author,
       source: 'standardEbooks',
       slug,

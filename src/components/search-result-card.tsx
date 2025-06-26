@@ -43,12 +43,12 @@ export function SearchResultCard({ book }: { book: SearchResult & { progress?: n
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Author-</p>
-            <p className="font-medium text-foreground truncate">{book.authors}</p>
+            <p className="font-medium text-foreground truncate">{book.authors || 'Unknown'}</p>
           </div>
         </CardContent>
         <CardFooter className="flex-col items-start p-4 pt-0">
           <p className="text-xs text-muted-foreground/80 w-full">
-            <span className="text-accent/50">src:</span> {book.source}
+            <span className="text-accent">src:</span> {book.source}
           </p>
            {book.progress !== undefined && book.progress > 0 && (
             <div className="w-full mt-2">
