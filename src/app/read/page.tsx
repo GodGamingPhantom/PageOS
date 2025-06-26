@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -245,9 +246,9 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="absolute inset-0 grid place-items-center p-4 sm:p-6 md:p-8"
+          className="absolute inset-0 grid place-items-center"
         >
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-6xl p-4 sm:p-6 md:p-8">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
