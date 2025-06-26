@@ -246,9 +246,9 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="absolute inset-0 grid place-items-center"
+          className="absolute inset-0"
         >
-          <div className="w-full max-w-6xl p-4 sm:p-6 md:p-8">
+          <div className="w-full h-full flex flex-col justify-center p-4 sm:p-8 md:p-12 lg:p-24">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
