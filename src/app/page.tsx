@@ -7,6 +7,15 @@ import type { SearchResult } from "@/adapters/sourceManager";
 import { SearchResultCard } from "@/components/search-result-card";
 import { LoaderCircle } from "lucide-react";
 import { fetchGutenbergBooks } from "@/adapters/gutendex";
+import { fetchOpenLibrary } from "@/adapters/openLibrary";
+
+const shuffleArray = (array: any[]) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
 
 export default function HomePage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -18,8 +27,17 @@ export default function HomePage() {
     async function loadFeaturedBooks() {
       setIsFeaturedLoading(true);
       try {
-        const books = await fetchGutenbergBooks();
-        setFeaturedBooks(books);
+        const [gutenbergBooks, openLibraryBooks] = await Promise.all([
+          fetchGutenbergBooks(),
+          fetchOpenLibrary('classic literature') 
+        ]);
+        
+        const allBooks = [
+          ...gutenbergBooks.slice(0, 10), 
+          ...openLibraryBooks.slice(0, 10)
+        ];
+
+        setFeaturedBooks(shuffleArray(allBooks));
       } catch (error) {
         console.error("Failed to load featured books:", error);
         setFeaturedBooks([]);
@@ -59,7 +77,7 @@ export default function HomePage() {
     return (
         <section>
              <h2 className="font-headline text-lg text-accent/80 mb-4">
-                // FEATURED_LOGS from Project Gutenberg
+                // FEATURED_LOGS from the Network
             </h2>
             {isFeaturedLoading ? (
                <div className="flex justify-center items-center p-8">
