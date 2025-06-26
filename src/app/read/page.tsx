@@ -257,9 +257,9 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="w-full h-full p-4 md:p-8"
+          className="absolute inset-0 grid place-items-center"
         >
-          <div className="w-full h-full max-w-4xl mx-auto">
+          <div className="w-full max-w-4xl px-4 md:px-8">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
@@ -304,18 +304,19 @@ function Reader() {
         </div>
       </header>
 
-      <main className="flex-1 relative overflow-hidden flex justify-center items-center">
-        {renderContent()}
+      <main className="flex-1 relative overflow-hidden flex flex-col">
+        <div className="flex-grow">
+          {renderContent()}
+        </div>
+        <div className="py-4">
+          <ReaderControls
+            onPrev={goToPrevSector}
+            onNext={goToNextSector}
+            isFirst={isFirst}
+            isLast={isLast}
+          />
+        </div>
       </main>
-
-      <div className="py-4">
-        <ReaderControls
-          onPrev={goToPrevSector}
-          onNext={goToNextSector}
-          isFirst={isFirst}
-          isLast={isLast}
-        />
-      </div>
     </div>
   );
 }
