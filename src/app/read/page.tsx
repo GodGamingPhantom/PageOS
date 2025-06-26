@@ -6,12 +6,10 @@ import { useEffect, useState, Suspense, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, Book, Monitor } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
-
-const SECTOR_SIZE = 4; // 4 paragraphs per sector
 
 function parseBookFromParams(params: URLSearchParams): SearchResult | null {
     const bookData = Object.fromEntries(params.entries());
@@ -68,6 +66,8 @@ function Reader() {
     if (!content) return [];
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
     const newSectors = [];
+    // Use a larger sector size for paged mode
+    const SECTOR_SIZE = 4;
     for (let i = 0; i < paragraphs.length; i += SECTOR_SIZE) {
         newSectors.push(paragraphs.slice(i, i + SECTOR_SIZE));
     }
@@ -246,9 +246,9 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="absolute inset-0"
+          className="absolute inset-0 grid place-items-center p-4 sm:p-6 md:p-8"
         >
-          <div className="w-full h-full flex flex-col justify-center p-4 sm:p-8 md:p-12 lg:p-24">
+          <div className="w-full max-w-6xl">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
