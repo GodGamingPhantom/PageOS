@@ -1,11 +1,12 @@
+
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense, useRef, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ScrollText, BookOpenCheck } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ScrollText, BookOpenCheck, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useReaderSettings } from '@/context/reader-settings-provider';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
@@ -34,6 +35,36 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
     return book as SearchResult;
 }
 
+const ReaderControls = ({ onPrev, onNext, isFirst, isLast, readingMode }: { onPrev: () => void, onNext: () => void, isFirst: boolean, isLast: boolean, readingMode: 'scroll' | 'paged' }) => {
+  const commonButtonClasses = "fixed z-30 h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0 disabled:pointer-events-none";
+
+  if (readingMode === 'paged') {
+    return (
+      <>
+        <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className={cn(commonButtonClasses, "left-4 top-1/2 -translate-y-1/2")}>
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+        <Button onClick={onNext} disabled={isLast} variant="ghost" size="icon" className={cn(commonButtonClasses, "right-4 top-1/2 -translate-y-1/2")}>
+          <ChevronRight className="h-6 w-6" />
+        </Button>
+      </>
+    );
+  }
+
+  // scroll mode
+  return (
+    <div className="fixed bottom-4 right-4 z-30 flex flex-col gap-2">
+      <Button onClick={onPrev} disabled={isFirst} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
+        <ChevronUp className="h-6 w-6" />
+      </Button>
+      <Button onClick={onNext} disabled={isLast} variant="ghost" size="icon" className="h-12 w-12 rounded-full bg-background/50 hover:bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-0">
+        <ChevronDown className="h-6 w-6" />
+      </Button>
+    </div>
+  );
+};
+
+
 function Reader() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -43,15 +74,16 @@ function Reader() {
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   const { user } = useAuth();
   const { toast } = useToast();
   const { readingMode, setReadingMode } = useReaderSettings();
-
+  
   const [libraryBook, setLibraryBook] = useState<LibraryBook | null>(null);
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(true);
   
   const [activeSector, setActiveSector] = useState(0);
+  const [direction, setDirection] = useState(0);
 
   const isBookmarked = !!libraryBook;
 
@@ -66,23 +98,16 @@ function Reader() {
   }, [content]);
 
   // Navigation logic
-  const goToSector = (index: number) => {
-    if (index < 0 || index >= sectors.length) return;
-
-    if (readingMode === 'scroll') {
-        const sectorElement = document.getElementById(`sector-${index}`);
-        sectorElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-        const container = mainRef.current;
-        if (container) {
-            const targetScrollLeft = container.offsetWidth * index;
-            container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
-        }
+  const paginate = (newDirection: number) => {
+    let newIndex = activeSector + newDirection;
+    if (newIndex >= 0 && newIndex < sectors.length) {
+      setDirection(newDirection);
+      setActiveSector(newIndex);
     }
   };
-
-  const goToNextSector = () => goToSector(activeSector + 1);
-  const goToPrevSector = () => goToSector(activeSector - 1);
+  
+  const goToNextSector = () => paginate(1);
+  const goToPrevSector = () => paginate(-1);
   
   // Load book content
   useEffect(() => {
@@ -128,19 +153,15 @@ function Reader() {
     setIsBookmarkLoading(true);
     const bookId = generateBookId(book);
     getLibraryBook(user.uid, bookId)
-        .then(setLibraryBook)
+        .then((lb) => {
+            setLibraryBook(lb);
+            if (lb?.lastReadSector && lb.lastReadSector < sectors.length) {
+                setActiveSector(lb.lastReadSector);
+            }
+        })
         .finally(() => setIsBookmarkLoading(false));
 
-  }, [user, book]);
-
-  // Auto-navigate to last read sector
-  useEffect(() => {
-    if (sectors.length > 0 && libraryBook?.lastReadSector) {
-        setTimeout(() => {
-            goToSector(libraryBook.lastReadSector);
-        }, 150);
-    }
-  }, [sectors, libraryBook, readingMode]);
+  }, [user, book, sectors.length]);
 
   // Debounced progress update to Firebase
   useEffect(() => {
@@ -148,7 +169,7 @@ function Reader() {
 
     const handler = setTimeout(() => {
         const bookId = generateBookId(book);
-        const percentage = sectors.length > 0 ? (activeSector / (sectors.length -1)) * 100 : 0;
+        const percentage = sectors.length > 0 ? ((activeSector + 1) / sectors.length) * 100 : 0;
         updateBookProgress(user.uid, bookId, {
             percentage: Math.min(100, percentage),
             lastReadSector: activeSector
@@ -158,32 +179,6 @@ function Reader() {
     return () => clearTimeout(handler);
   }, [activeSector, book, user, isBookmarked, sectors.length]);
 
-  // Set up IntersectionObserver to track active sector
-  useEffect(() => {
-    if (!mainRef.current) return;
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const sectorIndex = Number(entry.target.getAttribute('data-sector-index'));
-                    setActiveSector(sectorIndex);
-                }
-            });
-        },
-        { root: mainRef.current, threshold: readingMode === 'paged' ? 0.8 : 0.5 }
-    );
-
-    const sectorElements = mainRef.current?.querySelectorAll('[data-sector-index]');
-    if (sectorElements) {
-        sectorElements.forEach(el => observer.observe(el));
-    }
-
-    return () => {
-        if (sectorElements) {
-            sectorElements.forEach(el => observer.unobserve(el));
-        }
-    };
-  }, [sectors, readingMode]);
 
   const handleToggleBookmark = async () => {
     if (!user || !book) {
@@ -221,6 +216,26 @@ function Reader() {
         setIsBookmarkLoading(false);
     }
   };
+  
+  const variants = {
+    enter: (direction: number) => ({
+      x: readingMode === 'paged' ? (direction > 0 ? '100%' : '-100%') : 0,
+      y: readingMode === 'scroll' ? (direction > 0 ? '100%' : '-100%') : 0,
+      opacity: 0,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      y: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: readingMode === 'paged' ? (direction < 0 ? '100%' : '-100%') : 0,
+      y: readingMode === 'scroll' ? (direction < 0 ? '100%' : '-100%') : 0,
+      opacity: 0,
+    }),
+  };
 
 
   const renderContent = () => {
@@ -241,37 +256,41 @@ function Reader() {
         </div>
       );
     }
-    if (sectors.length > 0) {
-      return sectors.map((sector, index) => (
-        <motion.div
-            key={index}
-            id={`sector-${index}`}
-            data-sector-index={index}
-            className={cn(
-              "sector-frame group relative transition-shadow duration-300",
-              readingMode === 'scroll'
-                ? "my-12 rounded-lg border border-border/20 p-4 md:p-6 bg-card/50 hover:border-accent/50 hover:box-glow"
-                : "h-full w-screen flex-shrink-0 snap-center flex flex-col justify-center p-8 md:p-16 lg:p-24"
-            )}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.05 }}
-        >
-            <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                ▶ SECTOR {String(index + 1).padStart(4, '0')} ▍
-            </div>
-            <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                {sector.map((para, pi) => (
-                    <p key={pi} className="sector-paragraph">{para.trim()}</p>
-                ))}
-            </div>
-            <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                MEM.STREAM ▍ DECODING {((index + 1) / sectors.length * 100).toFixed(1)}%
-            </div>
-        </motion.div>
-      ));
-    }
-    return <div className="flex flex-1 justify-center items-center"><p>No content to display.</p></div>;
+    const currentSector = sectors[activeSector];
+    if (!currentSector) return <div className="flex flex-1 justify-center items-center"><p>No content to display.</p></div>;
+    
+    return (
+        <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+                key={activeSector}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    y: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
+                }}
+                className="absolute inset-0 p-8 md:p-16 lg:p-24 flex flex-col justify-center"
+            >
+                <div className="w-full max-w-3xl mx-auto">
+                    <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                        ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                    </div>
+                    <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                        {currentSector.map((para, pi) => (
+                            <p key={pi} className="sector-paragraph">{para.trim()}</p>
+                        ))}
+                    </div>
+                    <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                        MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+                    </div>
+                </div>
+            </motion.div>
+        </AnimatePresence>
+    );
   };
 
   return (
@@ -304,28 +323,15 @@ function Reader() {
         </div>
       </header>
 
-      <main ref={mainRef} className={cn(
-          "flex-1 relative",
-          readingMode === 'scroll' 
-            ? "overflow-y-auto" 
-            : "overflow-x-auto overflow-y-hidden flex flex-row h-full snap-x snap-mandatory"
-      )}>
-            <div className="absolute left-0 top-0 h-full w-1/4 z-20" onClick={goToPrevSector} />
-            <div className="absolute right-0 top-0 h-full w-1/4 z-20" onClick={goToNextSector} />
-          
-            <div className={cn(
-              readingMode === 'scroll' ? 'w-full max-w-3xl mx-auto' : 'flex h-full'
-            )}>
-              {readingMode === 'scroll' && book && (
-                <div className="my-8 font-body text-sm text-accent/80 space-y-1 px-4">
-                    <p>&gt;&gt;&gt; Transmission Link Established: "{book?.title}"</p>
-                    <p>&gt;&gt;&gt; Rendering S.E.C.T.O.R. stream...</p>
-                </div>
-              )}
-              <div className={cn(readingMode === 'paged' && "flex h-full")}>
-                {renderContent()}
-              </div>
-            </div>
+      <main ref={mainRef} className="flex-1 relative overflow-hidden">
+        {renderContent()}
+        <ReaderControls
+          onPrev={goToPrevSector}
+          onNext={goToNextSector}
+          readingMode={readingMode}
+          isFirst={activeSector === 0}
+          isLast={activeSector === sectors.length - 1}
+        />
       </main>
     </div>
   );
