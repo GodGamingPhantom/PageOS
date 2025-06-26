@@ -259,7 +259,7 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="w-full h-full flex items-center justify-center"
+          className="w-full flex items-center justify-center py-8"
         >
           <div className="w-full max-w-4xl mx-auto">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
@@ -306,8 +306,8 @@ function Reader() {
         </div>
       </header>
 
-      <main className="flex-1 relative flex flex-col justify-center items-center overflow-hidden">
-        <div className="relative w-full max-w-4xl h-full px-4 flex items-center justify-center">
+      <main className="flex-1 relative flex flex-col justify-center items-center">
+        <div className="relative w-full max-w-4xl h-full px-4 flex items-center justify-center overflow-y-auto">
           {renderContent()}
         </div>
 
