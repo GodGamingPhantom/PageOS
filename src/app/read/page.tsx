@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -27,6 +26,34 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
 
     return book as SearchResult;
 }
+
+const ReaderControls = ({ onPrev, onNext, isFirst, isLast }: { onPrev: () => void, onNext: () => void, isFirst: boolean, isLast: boolean }) => {
+  return (
+    <div className="flex justify-center items-center gap-4">
+      <Button
+        onClick={onPrev}
+        disabled={isFirst}
+        variant="outline"
+        size="icon"
+        aria-label="Previous Sector"
+        className="h-12 w-12 rounded-full bg-background/50 backdrop-blur-sm border-accent/30 text-accent hover:bg-accent/10 hover:text-accent hover:border-accent/50 disabled:opacity-50"
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </Button>
+      <Button
+        onClick={onNext}
+        disabled={isLast}
+        variant="outline"
+        size="icon"
+        aria-label="Next Sector"
+        className="h-12 w-12 rounded-full bg-background/50 backdrop-blur-sm border-accent/30 text-accent hover:bg-accent/10 hover:text-accent hover:border-accent/50 disabled:opacity-50"
+      >
+        <ChevronRight className="h-6 w-6" />
+      </Button>
+    </div>
+  );
+};
+
 
 function Reader() {
   const searchParams = useSearchParams();
@@ -230,7 +257,7 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="absolute inset-0 p-4"
+          className="w-full h-full p-4 md:p-8"
         >
           <div className="w-full h-full max-w-4xl mx-auto">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
@@ -279,29 +306,16 @@ function Reader() {
 
       <main className="flex-1 relative overflow-hidden flex justify-center items-center">
         {renderContent()}
-
-        <Button
-          onClick={goToPrevSector}
-          disabled={isFirst}
-          variant="outline"
-          size="icon"
-          aria-label="Previous Sector"
-          className="fixed bottom-4 left-4 md:left-8 md:top-1/2 md:-translate-y-1/2 z-30 h-12 w-12 rounded-full bg-background/50 backdrop-blur-sm border-accent/30 text-accent/80 hover:bg-accent/10 hover:text-accent hover:border-accent/50 disabled:opacity-20 disabled:pointer-events-none"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </Button>
-        
-        <Button
-          onClick={goToNextSector}
-          disabled={isLast}
-          variant="outline"
-          size="icon"
-          aria-label="Next Sector"
-          className="fixed bottom-4 right-4 md:right-8 md:top-1/2 md:-translate-y-1/2 z-30 h-12 w-12 rounded-full bg-background/50 backdrop-blur-sm border-accent/30 text-accent/80 hover:bg-accent/10 hover:text-accent hover:border-accent/50 disabled:opacity-20 disabled:pointer-events-none"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </Button>
       </main>
+
+      <div className="py-4">
+        <ReaderControls
+          onPrev={goToPrevSector}
+          onNext={goToNextSector}
+          isFirst={isFirst}
+          isLast={isLast}
+        />
+      </div>
     </div>
   );
 }
