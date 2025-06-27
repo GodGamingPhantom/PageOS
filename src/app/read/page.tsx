@@ -347,12 +347,11 @@ function Reader() {
   const currentSector = sectors[activeSector];
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col">
+    <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col overflow-x-hidden">
       {header}
 
-      <main className="flex-1 relative">
-        <div className="absolute inset-0 overflow-y-auto flex flex-col items-center justify-center px-4 pt-8 pb-28">
-          <div className="w-full max-w-3xl">
+      <main className="flex-1 overflow-y-auto px-4 pt-8 pb-28">
+        <div className="w-full max-w-3xl mx-auto">
             {!currentSector ? (
               <div className="flex-1 grid place-items-center"><p>No content to display.</p></div>
             ) : (
@@ -386,7 +385,6 @@ function Reader() {
                 </motion.div>
               </AnimatePresence>
             )}
-          </div>
         </div>
       </main>
 
