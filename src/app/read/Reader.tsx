@@ -71,7 +71,7 @@ const Reader = () => {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-x-hidden w-screen">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-x-hidden w-full max-w-full">
       {/* HEADER */}
       <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground h-[41px] shrink-0 w-full">
         <div className="flex items-center gap-2 min-w-0">
@@ -122,7 +122,7 @@ const Reader = () => {
               className="absolute inset-0"
             >
               {currentSector ? (
-                <div className="w-screen min-h-[calc(100vh-3.5rem)] px-4 sm:px-6 pt-12 pb-36 flex flex-col justify-between">
+                <div className="w-full max-w-full min-h-[calc(100vh-3.5rem)] px-4 sm:px-6 pt-12 pb-36 flex flex-col justify-between">
                   {/* Top Content */}
                   <div>
                     <div className="font-headline text-xs text-accent/80 mb-4">
