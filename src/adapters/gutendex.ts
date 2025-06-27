@@ -19,9 +19,15 @@ export type MappedGutenbergBook = {
 };
 
 export async function fetchGutenbergBooks(query?: string, page = 1): Promise<MappedGutenbergBook[]> {
-  const apiUrl = query
-    ? `https://gutendex.com/books?search=${encodeURIComponent(query)}&page=${page}`
-    : `https://gutendex.com/books?sort=popular&page=${page}`;
+  const params = new URLSearchParams();
+  if (query) {
+    params.set('search', query);
+  } else {
+    params.set('sort', 'popular');
+  }
+  params.set('page', String(page));
+  
+  const apiUrl = `https://gutendex.com/books?${params.toString()}`;
   
   const res = await fetch(`/api/proxy?url=${encodeURIComponent(apiUrl)}`);
   if (!res.ok) {

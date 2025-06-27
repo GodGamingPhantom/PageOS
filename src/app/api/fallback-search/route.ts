@@ -3,13 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * THIS IS A MOCK API ENDPOINT.
- * In a real-world scenario, you would replace the mock data with a call
+ * In a real-world scenario, you would replace this mock data with a call
  * to an external web search API like SerpAPI, Google Search API, or Bing Search API.
- * This involves:
- * 1. Getting an API key from the search provider.
- * 2. Storing it securely as an environment variable (e.g., in a .env.local file).
- * 3. Using `fetch` to call the provider's API endpoint with the query and API key.
- * 4. Parsing the response and returning it as JSON.
+ * This has been modified to return an empty array to allow for proper testing
+ * of the primary data sources and the "no results" UI.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -20,28 +17,22 @@ export async function GET(request: NextRequest) {
   }
 
   // --- START OF MOCK IMPLEMENTATION ---
-  // In a real implementation, you would remove this and call a real search API.
+  // This now returns an empty array to prevent incorrect results from showing.
+  const mockResults: any[] = [];
+  
+  // To test the fallback UI, you could temporarily enable a mock result
+  // for a specific query, like this:
+  // if (query.toLowerCase().includes('alice')) {
+  //   mockResults.push({
+  //     title: `Alice's Adventures in Wonderland (HTML)`,
+  //     link: `https://www.gutenberg.org/files/11/11-h/11-h.htm`,
+  //     snippet: `The complete book from Project Gutenberg in HTML format. This will open in the PageOS reader.`,
+  //   });
+  // }
 
-  const mockResults = [
-    {
-      title: `Alice's Adventures in Wonderland (PDF)`,
-      link: `https://www.gutenberg.org/files/11/11-pdf.pdf`,
-      snippet: `The complete book from Project Gutenberg in PDF format. This will open in a new tab.`,
-    },
-    {
-      title: `Alice's Adventures in Wonderland (HTML)`,
-      link: `https://www.gutenberg.org/files/11/11-h/11-h.htm`,
-      snippet: `The complete book from Project Gutenberg in HTML format. This will open in the PageOS reader.`,
-    },
-    {
-      title: `Alice's Adventures in Wonderland (TXT)`,
-      link: `https://www.gutenberg.org/files/11/11-0.txt`,
-      snippet: `The complete book from Project Gutenberg in plain text format. This will open in the PageOS reader.`,
-    },
-  ];
 
   // Simulate a network delay
-  await new Promise(resolve => setTimeout(resolve, 800));
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   return NextResponse.json({ results: mockResults });
   // --- END OF MOCK IMPLEMENTATION ---
