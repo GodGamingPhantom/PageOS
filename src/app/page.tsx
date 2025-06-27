@@ -78,15 +78,15 @@ export default function HomePage() {
     setHasSearched(true);
 
     try {
-      const webSearchPromise = fetch(`/api/websearch?q=${encodeURIComponent(query)}`).then(res => res.json());
+      const webSearchPromise = fetch(`/api/brave-search?q=${encodeURIComponent(query)}`).then(res => res.json());
       const gutenbergPromise = fetchGutenbergBooks(query);
 
       const [webData, gutenbergData] = await Promise.allSettled([webSearchPromise, gutenbergPromise]);
       
-      if (webData.status === 'fulfilled') {
+      if (webData.status === 'fulfilled' && !webData.value.error) {
         setWebResults(webData.value || []);
       } else {
-        console.error("Web search failed:", webData.reason);
+        console.error("Web search failed:", webData.status === 'rejected' ? webData.reason : webData.value.error);
         setWebResults([]);
       }
       
@@ -150,7 +150,7 @@ export default function HomePage() {
                 <CardHeader>
                     <CardTitle className="font-headline text-accent/80">External Links Found</CardTitle>
                     <CardDescription>
-                        The following are unverified links from the open web.
+                        The following are unverified links from Brave Search.
                         TXT and HTML will open in the reader. PDFs will open in a new tab.
                     </CardDescription>
                 </CardHeader>
