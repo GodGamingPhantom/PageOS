@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { CommandSearch } from "@/components/command-search";
-import type { SearchResult } from "@/adapters/sourceManager";
+import type { SearchResult, SearchResponse } from "@/adapters/sourceManager";
+import type { WebFallbackResult } from "@/adapters/webFallback";
 import { SearchResultCard } from "@/components/search-result-card";
 import { LoaderCircle, SignalZero } from "lucide-react";
 import { fetchGutenbergBooks } from "@/adapters/gutendex";
 import { fetchOpenLibrary } from "@/adapters/openLibrary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FallbackLinks } from "@/components/fallback-links";
 
 const shuffleArray = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -18,7 +20,8 @@ const shuffleArray = (array: any[]) => {
 };
 
 export default function HomePage() {
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [primaryResults, setPrimaryResults] = useState<SearchResult[]>([]);
+  const [fallbackResults, setFallbackResults] = useState<WebFallbackResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [featuredBooks, setFeaturedBooks] = useState<SearchResult[]>([]);
@@ -56,6 +59,11 @@ export default function HomePage() {
     }
   };
 
+  const handleResults = (results: SearchResponse) => {
+    setPrimaryResults(results.primary);
+    setFallbackResults(results.fallback);
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -68,14 +76,14 @@ export default function HomePage() {
       );
     }
 
-    if (searchResults.length > 0) {
+    if (primaryResults.length > 0) {
       return (
         <section>
           <h2 className="font-headline text-lg text-accent/80 mb-4 border-b border-dashed border-border pb-2">
             // QUERY_RESULTS
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {searchResults.map((book, index) => (
+            {primaryResults.map((book, index) => (
               <SearchResultCard
                 key={`${book.source}-${book.id}-${index}`}
                 book={book}
@@ -84,6 +92,10 @@ export default function HomePage() {
           </div>
         </section>
       );
+    }
+
+    if (fallbackResults.length > 0) {
+      return <FallbackLinks results={fallbackResults} />;
     }
 
     if (hasSearched) {
@@ -147,7 +159,7 @@ export default function HomePage() {
         </p>
       </div>
 
-      <CommandSearch onResults={setSearchResults} onLoading={handleLoading} />
+      <CommandSearch onResults={handleResults} onLoading={handleLoading} />
 
       {renderContent()}
     </div>

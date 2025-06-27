@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Filter, LoaderCircle, Search } from "lucide-react";
-import type { SearchResult, SourceKey } from "@/adapters/sourceManager";
+import type { SearchResponse, SourceKey } from "@/adapters/sourceManager";
 import { searchBooksAcrossSources } from "@/adapters/sourceManager";
 import { useReaderSettings } from "@/context/reader-settings-provider";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 interface CommandSearchProps {
-  onResults: (results: SearchResult[]) => void;
+  onResults: (results: SearchResponse) => void;
   onLoading: (loading: boolean) => void;
 }
 
@@ -29,7 +29,7 @@ export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
 
   const handleSearch = async () => {
     if (!value) {
-      onResults([]);
+      onResults({ primary: [], fallback: [] });
       return;
     };
     setIsSearching(true);
@@ -43,7 +43,7 @@ export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
       onResults(results);
     } catch (error) {
       console.error("Search failed:", error);
-      onResults([]);
+      onResults({ primary: [], fallback: [] });
     } finally {
       setIsSearching(false);
       onLoading(false);
@@ -65,7 +65,7 @@ export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
         </span>
         <Input
           type="text"
-          placeholder="Search public domain archives..."
+          placeholder="Search public domain archives or the web..."
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -93,7 +93,7 @@ export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
             <div className="space-y-2">
               <h4 className="font-medium leading-none font-headline text-accent/80">TRANSMISSION_NODES</h4>
               <p className="text-sm text-muted-foreground">
-                Enable or disable sources for your query.
+                Enable or disable primary sources for your query.
               </p>
             </div>
             <div className="grid gap-3">
