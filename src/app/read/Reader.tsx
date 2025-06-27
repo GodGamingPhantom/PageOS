@@ -9,7 +9,7 @@ import TOCModal from './TOCModal';
 import { useAuth } from '@/context/auth-provider';
 import useBookLoader from '@/hooks/useBookLoader';
 import useBookmark from '@/hooks/useBookmark';
-import ReaderControls from './ReaderControls';
+import ReaderControls from '@/components/ReaderControls';
 
 const Reader = () => {
   const searchParams = useSearchParams();
@@ -99,28 +99,6 @@ const Reader = () => {
     </header>
   );
 
-  const sectorContent = currentSector ? (
-    <div className="sector relative">
-      <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-        ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-      </div>
-      <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-        {currentSector.map((p, i) => (
-          <p key={i}>{p.trim()}</p>
-        ))}
-      </div>
-      <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-        MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-      </div>
-      {/* breathing space below MEM.STREAM */}
-      <div className="h-24" />
-    </div>
-  ) : (
-    <div className="flex items-center justify-center h-full text-muted-foreground">
-      No content to display.
-    </div>
-  );
-  
   if (isLoading) return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] items-center justify-center gap-4">
       <LoaderCircle className="h-6 w-6 animate-spin text-accent" />
@@ -142,7 +120,27 @@ const Reader = () => {
       <main className="flex-1 overflow-y-auto relative px-4 pt-12 pb-48">
         <div className="max-w-3xl mx-auto w-full min-h-[calc(100vh-12rem)] relative">
           <div className="invisible">
-              {sectorContent}
+              {currentSector ? (
+                <div className="sector relative">
+                  <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                    ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                  </div>
+                  <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                    {currentSector.map((p, i) => (
+                      <p key={i}>{p.trim()}</p>
+                    ))}
+                  </div>
+                  <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                    MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+                  </div>
+                  {/* breathing space below MEM.STREAM */}
+                  <div className="h-24" />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  No content to display.
+                </div>
+              )}
           </div>
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
@@ -157,7 +155,27 @@ const Reader = () => {
               }}
               className="absolute inset-0"
             >
-              {sectorContent}
+              {currentSector ? (
+                <div className="sector relative">
+                  <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                    ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                  </div>
+                  <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                    {currentSector.map((p, i) => (
+                      <p key={i}>{p.trim()}</p>
+                    ))}
+                  </div>
+                  <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                    MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+                  </div>
+                  {/* breathing space below MEM.STREAM */}
+                  <div className="h-24" />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  No content to display.
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
