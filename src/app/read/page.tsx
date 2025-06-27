@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -276,75 +275,15 @@ function Reader() {
     }),
   };
 
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex-1 grid place-items-center">
-          <div className="flex flex-col items-center gap-4">
-            <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
-            <p>Rendering Transmission...</p>
-          </div>
-        </div>
-      );
-    }
-    if (error) {
-      return (
-        <div className="flex-1 grid place-items-center">
-          <div className="flex flex-col items-center gap-4 text-destructive">
-            <AlertTriangle className="h-8 w-8" />
-            <p className="font-headline">TRANSMISSION_ERROR</p>
-            <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
-          </div>
-        </div>
-      );
-    }
-    const currentSector = sectors[activeSector];
-    if (!currentSector) return <div className="flex-1 grid place-items-center"><p>No content to display.</p></div>;
-    
-    return (
-      <AnimatePresence initial={false} custom={direction}>
-        <motion.div
-          key={activeSector}
-          layout
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 300, damping: 30 },
-            opacity: { duration: 0.2 },
-          }}
-          className="w-full"
-        >
-          <div className="w-full max-w-3xl mx-auto">
-            <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-            </div>
-            <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                {currentSector.map((para, pi) => (
-                    <p key={pi} className="sector-paragraph">{para.trim()}</p>
-                ))}
-            </div>
-            <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    );
-  };
-
-  return (
-    <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col">
-      <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <span className="truncate">{`TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id.slice(-20) || '...'}`}</span>
-        </div>
+  const header = (
+    <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <span className="truncate">{isLoading ? 'LOADING...' : error ? 'ERROR' : `TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id.slice(-20) || '...'}`}</span>
+      </div>
+      {!isLoading && !error && (
         <div className="flex items-center gap-2">
           {toc.length > 0 && (
             <Button
@@ -373,16 +312,86 @@ function Reader() {
           </Button>
           <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => router.push('/settings')}><Settings className="h-4 w-4" /></Button>
         </div>
-      </header>
+      )}
+    </header>
+  );
 
-      <main className="flex-1 relative flex flex-col justify-center items-center">
-        <div className="relative w-full max-w-4xl h-full px-4 flex items-center justify-center overflow-y-auto">
-          {renderContent()}
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col">
+        {header}
+        <main className="flex-1 grid place-items-center">
+          <div className="flex flex-col items-center gap-4">
+            <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
+            <p>Rendering Transmission...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col">
+        {header}
+        <main className="flex-1 grid place-items-center">
+          <div className="flex flex-col items-center gap-4 text-destructive">
+            <AlertTriangle className="h-8 w-8" />
+            <p className="font-headline">TRANSMISSION_ERROR</p>
+            <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const currentSector = sectors[activeSector];
+
+  return (
+    <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col">
+      {header}
+
+      <main className="flex-1 relative">
+        <div className="absolute inset-0 overflow-y-auto flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-3xl">
+            {!currentSector ? (
+              <div className="flex-1 grid place-items-center"><p>No content to display.</p></div>
+            ) : (
+              <AnimatePresence initial={false} custom={direction}>
+                <motion.div
+                  key={activeSector}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="w-full"
+                >
+                  <div className="sector">
+                    <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                        ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                    </div>
+                    <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                        {currentSector.map((para, pi) => (
+                            <p key={pi} className="sector-paragraph">{para.trim()}</p>
+                        ))}
+                    </div>
+                    <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                        MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </div>
         </div>
       </main>
 
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-        <div className="pointer-events-auto">
+      <div className="fixed bottom-4 left-0 right-0 z-50 pointer-events-none">
+        <div className="w-full flex justify-center pointer-events-auto">
           <ReaderControls
             onPrev={goToPrevSector}
             onNext={goToNextSector}
@@ -435,4 +444,3 @@ export default function ReaderPage() {
     </Suspense>
   );
 }
-
