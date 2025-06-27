@@ -351,7 +351,7 @@ function Reader() {
       {header}
 
       <main className="flex-1 relative">
-        <div className="absolute inset-0 overflow-y-auto flex flex-col items-center justify-center p-4">
+        <div className="absolute inset-0 overflow-y-auto flex flex-col items-center justify-center px-4 pt-8 pb-28">
           <div className="w-full max-w-3xl">
             {!currentSector ? (
               <div className="flex-1 grid place-items-center"><p>No content to display.</p></div>
