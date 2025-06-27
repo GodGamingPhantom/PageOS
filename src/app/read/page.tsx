@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -315,13 +316,13 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="w-full min-w-[100%] flex items-center justify-center py-8"
+          className="w-full"
         >
-          <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full max-w-3xl mx-auto">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
-            <div className="sector-body max-w-3xl w-full space-y-4 font-reader text-base leading-relaxed text-foreground/90 px-4 py-8">
+            <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
                 {currentSector.map((para, pi) => (
                     <p key={pi} className="sector-paragraph">{para.trim()}</p>
                 ))}
@@ -434,3 +435,4 @@ export default function ReaderPage() {
     </Suspense>
   );
 }
+
