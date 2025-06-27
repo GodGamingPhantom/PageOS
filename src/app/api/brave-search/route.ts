@@ -16,8 +16,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const braveURL = makeBraveSearchURL(query);
-    console.log(`[Brave Search] Fetching URL: ${braveURL}`);
-
+    
     const res = await fetch(braveURL, {
       headers: {
         // Using a standard browser User-Agent to avoid being blocked.
@@ -28,35 +27,27 @@ export async function GET(req: NextRequest) {
     });
 
     if (!res.ok) {
-      console.error(`[Brave Search] Fetch failed with status: ${res.status}`);
       throw new Error(`Brave search failed with status: ${res.status}`);
     }
     
-    console.log(`[Brave Search] Fetch successful with status: ${res.status}`);
-
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // This is the robust selector you recommended, which grabs any link.
-    const allFoundLinks = $('a[href^="http"]').map((i, el) => {
+    const rawLinks = $('a[href^="http"]').map((i, el) => {
         return {
             title: $(el).text().trim(),
             href: $(el).attr('href'),
         };
     }).get();
 
-    console.log(`[Brave Search] Found ${allFoundLinks.length} total potential links from selector 'a[href^="http"]'.`);
-
-    const results = allFoundLinks.filter(link => 
-        link.href && (link.href.toLowerCase().endsWith('.pdf') || link.href.toLowerCase().endsWith('.txt'))
+    const results = rawLinks.filter(link => 
+        link.href && (/\.(pdf|txt)$/i.test(link.href))
     ).map(link => ({
         title: link.title,
         link: link.href!,
         type: link.href!.toLowerCase().endsWith('.pdf') ? 'pdf' : 'txt',
     }));
     
-    console.log(`[Brave Search] Found ${results.length} valid PDF/TXT links after filtering.`);
-
     // Return the first 5 valid results.
     return NextResponse.json(results.slice(0, 5));
 

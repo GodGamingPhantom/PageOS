@@ -2,14 +2,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { CommandSearch } from "@/components/command-search";
 import type { SearchResult } from "@/adapters/sourceManager";
 import { SearchResultCard } from "@/components/search-result-card";
-import { LoaderCircle, SignalZero, Globe, FileText, FileJson2, FileQuestion } from "lucide-react";
+import { LoaderCircle, SignalZero } from "lucide-react";
 import { fetchGutenbergBooks } from "@/adapters/gutendex";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WebFallbackResults, type WebFallbackResult } from "@/components/web-fallback-results";
 
 const shuffleArray = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -19,32 +18,9 @@ const shuffleArray = (array: any[]) => {
   return array;
 };
 
-type WebResult = {
-  title: string;
-  link: string;
-};
-
-const getFiletypeFromUrl = (url: string): 'pdf' | 'txt' | 'html' | 'other' => {
-  if (!url) return 'other';
-  const lowerUrl = url.toLowerCase();
-  if (lowerUrl.endsWith('.pdf')) return 'pdf';
-  if (lowerUrl.endsWith('.txt')) return 'txt';
-  if (lowerUrl.endsWith('.html') || lowerUrl.endsWith('.htm')) return 'html';
-  return 'other';
-};
-
-const FiletypeIcon = ({ type }: { type: 'pdf' | 'txt' | 'html' | 'other' }) => {
-    switch (type) {
-        case 'html': return <Globe className="h-4 w-4 text-accent" />;
-        case 'pdf': return <FileJson2 className="h-4 w-4 text-accent" />;
-        case 'txt': return <FileText className="h-4 w-4 text-accent" />;
-        default: return <FileQuestion className="h-4 w-4 text-accent" />;
-    }
-}
-
 export default function HomePage() {
   const [primaryResults, setPrimaryResults] = useState<SearchResult[]>([]);
-  const [webResults, setWebResults] = useState<WebResult[]>([]);
+  const [webResults, setWebResults] = useState<WebFallbackResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [featuredBooks, setFeaturedBooks] = useState<SearchResult[]>([]);
@@ -138,68 +114,6 @@ export default function HomePage() {
     );
   };
   
-  const renderWebResults = () => {
-     if (webResults.length === 0) return null;
-
-      return (
-        <section className="col-span-full">
-            <h2 className="font-headline text-lg text-accent/80 mb-4 border-b border-dashed border-border pb-2">
-                // WEB_FALLBACK_RESULTS
-            </h2>
-            <Card className="border-border/50 bg-card">
-                <CardHeader>
-                    <CardTitle className="font-headline text-accent/80">External Links Found</CardTitle>
-                    <CardDescription>
-                        The following are unverified links from Brave Search.
-                        TXT and HTML will open in the reader. PDFs will open in a new tab.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ul className="space-y-4">
-                        {webResults.map((result, index) => {
-                            const filetype = getFiletypeFromUrl(result.link);
-                            const isReadableInApp = filetype === 'txt' || filetype === 'html';
-                            
-                            const linkHref = isReadableInApp 
-                                ? `/read?source=web&url=${encodeURIComponent(result.link)}&title=${encodeURIComponent(result.title)}`
-                                : result.link;
-                            
-                            const linkProps = isReadableInApp 
-                                ? {}
-                                : { target: "_blank", rel: "noopener noreferrer" };
-
-                            const Wrapper = isReadableInApp ? Link : 'a';
-
-                            return (
-                                <li key={index} className="rounded-md border border-border/30 p-4 transition-colors hover:bg-input/50">
-                                    <Wrapper href={linkHref} {...linkProps} className="group">
-                                        <div className="flex items-start gap-4">
-                                            <FiletypeIcon type={filetype} />
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <p className="font-medium text-foreground group-hover:text-accent group-hover:underline">
-                                                        {result.title}
-                                                    </p>
-                                                    <Badge variant="outline" className="border-accent/50 text-accent/80 text-xs">
-                                                        {filetype.toUpperCase()}
-                                                    </Badge>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground/70 mt-2 truncate group-hover:text-accent/80">
-                                                    {result.link}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </Wrapper>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </CardContent>
-            </Card>
-        </section>
-      );
-  }
-
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -223,7 +137,7 @@ export default function HomePage() {
               {renderPrimaryResults()}
             </div>
           </section>
-          {renderWebResults()}
+          <WebFallbackResults results={webResults} />
         </>
       );
     }
