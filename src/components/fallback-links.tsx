@@ -1,4 +1,5 @@
 // src/components/fallback-links.tsx
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { WebFallbackResult } from "@/adapters/webFallback";
 import { Globe, FileText, FileJson2, FileQuestion } from "lucide-react";
@@ -24,41 +25,50 @@ export function FallbackLinks({ results }: { results: WebFallbackResult[] }) {
                 <CardTitle className="font-headline text-accent/80">External Links Found</CardTitle>
                 <CardDescription>
                     Primary archives returned no results. The following are unverified links from the open web.
-                    Proceed with caution.
+                    TXT and HTML will open in the reader. PDFs will open in a new tab.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <ul className="space-y-4">
-                    {results.map((result, index) => (
-                        <li key={index} className="rounded-md border border-border/30 p-4 transition-colors hover:bg-input/50">
-                             <a
-                                href={result.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group"
-                            >
-                                <div className="flex items-start gap-4">
-                                    <FiletypeIcon type={result.filetype} />
-                                    <div className="flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <p className="font-medium text-foreground group-hover:text-accent group-hover:underline">
-                                                {result.title}
+                    {results.map((result, index) => {
+                        const isReadableInApp = result.filetype === 'txt' || result.filetype === 'html';
+                        
+                        const linkHref = isReadableInApp 
+                            ? `/read?url=${encodeURIComponent(result.url)}&title=${encodeURIComponent(result.title)}`
+                            : result.url;
+                        
+                        const linkProps = isReadableInApp 
+                            ? {}
+                            : { target: "_blank", rel: "noopener noreferrer" };
+
+                        const Wrapper = isReadableInApp ? Link : 'a';
+
+                        return (
+                            <li key={index} className="rounded-md border border-border/30 p-4 transition-colors hover:bg-input/50">
+                                <Wrapper href={linkHref} {...linkProps} className="group">
+                                    <div className="flex items-start gap-4">
+                                        <FiletypeIcon type={result.filetype} />
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between">
+                                                <p className="font-medium text-foreground group-hover:text-accent group-hover:underline">
+                                                    {result.title}
+                                                </p>
+                                                <Badge variant="outline" className="border-accent/50 text-accent/80 text-xs">
+                                                    {result.filetype.toUpperCase()}
+                                                </Badge>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                                {result.snippet}
                                             </p>
-                                            <Badge variant="outline" className="border-accent/50 text-accent/80 text-xs">
-                                                {result.filetype.toUpperCase()}
-                                            </Badge>
+                                            <p className="text-xs text-muted-foreground/70 mt-2 truncate group-hover:text-accent/80">
+                                                {result.url}
+                                            </p>
                                         </div>
-                                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                            {result.snippet}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground/70 mt-2 truncate group-hover:text-accent/80">
-                                            {result.url}
-                                        </p>
                                     </div>
-                                </div>
-                            </a>
-                        </li>
-                    ))}
+                                </Wrapper>
+                            </li>
+                        );
+                    })}
                 </ul>
             </CardContent>
         </Card>

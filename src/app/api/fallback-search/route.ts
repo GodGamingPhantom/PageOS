@@ -24,24 +24,19 @@ export async function GET(request: NextRequest) {
 
   const mockResults = [
     {
-      title: `"${query}" Full Text - Project Gutenberg`,
-      link: `https://www.gutenberg.org/files/11/11-h/11-h.htm`, // Example HTML link
-      snippet: `The full text of ${query}, provided by Project Gutenberg. Available in HTML, EPUB, and other formats.`,
+      title: `Alice's Adventures in Wonderland (PDF)`,
+      link: `https://www.gutenberg.org/files/11/11-pdf.pdf`,
+      snippet: `The complete book from Project Gutenberg in PDF format. This will open in a new tab.`,
     },
     {
-      title: `[PDF] ${query} - Example University`,
-      link: `https://example.edu/hosting/${query.replace(/\s+/g, '_')}.pdf`, // Example PDF link
-      snippet: `An academic PDF version of ${query}. For research and educational purposes.`,
+      title: `Alice's Adventures in Wonderland (HTML)`,
+      link: `https://www.gutenberg.org/files/11/11-h/11-h.htm`,
+      snippet: `The complete book from Project Gutenberg in HTML format. This will open in the PageOS reader.`,
     },
     {
-      title: `${query} (.txt) - The Internet Archive`,
-      link: `https://archive.org/stream/some_book/data.txt`, // Example TXT link
-      snippet: `Plain text version of ${query} hosted on The Internet Archive.`,
-    },
-    {
-      title: `Buy ${query} - Amazon`,
-      link: `https://www.amazon.com/s?k=${encodeURIComponent(query)}`, // Example of a non-book link to be filtered out
-      snippet: `This link should be filtered out by the adapter as it is not a direct content link.`,
+      title: `Alice's Adventures in Wonderland (TXT)`,
+      link: `https://www.gutenberg.org/files/11/11-0.txt`,
+      snippet: `The complete book from Project Gutenberg in plain text format. This will open in the PageOS reader.`,
     },
   ];
 

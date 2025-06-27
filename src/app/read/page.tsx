@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
+import { fetchContentFromUrl } from '@/adapters/webFallback';
 import { Button } from '@/components/ui/button';
 import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
@@ -69,12 +70,13 @@ function Reader() {
   const { toast } = useToast();
   
   const [libraryBook, setLibraryBook] = useState<LibraryBook | null>(null);
-  const [isBookmarkLoading, setIsBookmarkLoading] = useState(true);
+  const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
   
   const [activeSector, setActiveSector] = useState(0);
   const [direction, setDirection] = useState(0);
 
   const isBookmarked = !!libraryBook;
+  const isWebFallback = book?.source === 'web-fallback';
 
   const sectors = useMemo(() => {
     if (!content) return [];
@@ -99,39 +101,57 @@ function Reader() {
   const goToPrevSector = () => paginate(-1);
   
   useEffect(() => {
-    const parsedBook = parseBookFromParams(searchParams);
-    if (!parsedBook) {
-      setError("Book data is incomplete or invalid.");
-      setIsLoading(false);
-      return;
-    }
-    setBook(parsedBook);
-
-    const loadContent = async () => {
+    const loadBookData = async () => {
       setIsLoading(true);
       setError(null);
+      const fallbackUrl = searchParams.get('url');
+      const fallbackTitle = searchParams.get('title');
+
       try {
-        const bookContent = await fetchBookContent(parsedBook);
-        if (typeof bookContent === 'string') {
-          setContent(bookContent);
+        let currentBook: SearchResult | null = null;
+        let loadedContent: string | Blob | null = null;
+
+        if (fallbackUrl && fallbackTitle) {
+          currentBook = {
+            id: fallbackUrl,
+            source: 'web-fallback' as any,
+            title: fallbackTitle,
+            authors: 'Source: Web',
+          };
+          loadedContent = await fetchContentFromUrl(fallbackUrl);
         } else {
-          setError('EPUB reader not implemented. Cannot display content from this source.');
+          currentBook = parseBookFromParams(searchParams);
+          if (currentBook) {
+            loadedContent = await fetchBookContent(currentBook);
+          }
+        }
+
+        if (!currentBook) {
+          throw new Error("Book data is incomplete or invalid.");
+        }
+
+        setBook(currentBook);
+
+        if (typeof loadedContent === 'string') {
+          setContent(loadedContent);
+        } else {
+          setError('Unsupported format. The reader can only display plain text or HTML content.');
           setContent(null);
         }
       } catch (e) {
         console.error(e);
-        setError(e instanceof Error ? e.message : 'Failed to load book content.');
+        setError(e instanceof Error ? e.message : 'An unknown error occurred while loading the book.');
         setContent(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadContent();
+    loadBookData();
   }, [searchParams]);
   
   useEffect(() => {
-    if (!user || !book) {
+    if (!user || !book || isWebFallback) {
         setLibraryBook(null);
         setIsBookmarkLoading(false);
         return;
@@ -148,10 +168,10 @@ function Reader() {
         })
         .finally(() => setIsBookmarkLoading(false));
 
-  }, [user, book, sectors.length]);
+  }, [user, book, sectors.length, isWebFallback]);
 
   useEffect(() => {
-    if (!isBookmarked || !user || !book || sectors.length === 0) return;
+    if (!isBookmarked || !user || !book || sectors.length === 0 || isWebFallback) return;
 
     const handler = setTimeout(() => {
         const bookId = generateBookId(book);
@@ -163,15 +183,15 @@ function Reader() {
     }, 1500);
 
     return () => clearTimeout(handler);
-  }, [activeSector, book, user, isBookmarked, sectors.length]);
+  }, [activeSector, book, user, isBookmarked, sectors.length, isWebFallback]);
 
 
   const handleToggleBookmark = async () => {
-    if (!user || !book) {
+    if (!user || !book || isWebFallback) {
         toast({
             variant: "destructive",
-            title: "Authentication Error",
-            description: "You must be logged in to save books to your library.",
+            title: "Action Not Available",
+            description: "Cannot save web fallback links to your library.",
         });
         return;
     }
@@ -287,7 +307,7 @@ function Reader() {
           <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <span className="truncate">{`TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id || '...'}`}</span>
+          <span className="truncate">{`TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id.slice(-20) || '...'}`}</span>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -295,7 +315,8 @@ function Reader() {
             size="icon"
             aria-label="Bookmark"
             onClick={handleToggleBookmark}
-            disabled={isBookmarkLoading || !user}
+            disabled={isBookmarkLoading || !user || isWebFallback}
+            title={isWebFallback ? "Cannot bookmark web results" : "Bookmark this transmission"}
           >
             {isBookmarkLoading ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
