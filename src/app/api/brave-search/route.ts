@@ -37,15 +37,15 @@ export async function GET(req: NextRequest) {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // This is a more robust selector for Brave/Bing search results.
-    const allFoundLinks = $('li.b_algo h2 a').map((i, el) => {
+    // CORRECTED: This selector is designed for Brave's search result structure.
+    const allFoundLinks = $('a[href^="http"]').map((i, el) => {
         return {
-            title: $(el).text(),
+            title: $(el).text().trim(),
             href: $(el).attr('href'),
         };
     }).get();
 
-    console.log(`[Brave Search] Found ${allFoundLinks.length} total result links from selector 'li.b_algo h2 a'.`);
+    console.log(`[Brave Search] Found ${allFoundLinks.length} total potential links from selector 'a[href^="http"]'.`);
 
     const results = allFoundLinks.filter(link => 
         link.href && (link.href.toLowerCase().endsWith('.pdf') || link.href.toLowerCase().endsWith('.txt'))
