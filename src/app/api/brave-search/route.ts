@@ -4,7 +4,6 @@ import * as cheerio from 'cheerio';
 
 function makeBraveSearchURL(query: string) {
   // This query is crafted to find free, full-text ebooks in PDF or TXT format.
-  // Using a more direct query format to improve result accuracy.
   const finalQuery = `${query} ebook free filetype:pdf OR filetype:txt`;
   return `https://search.brave.com/search?q=${encodeURIComponent(finalQuery)}&source=web`;
 }
@@ -17,6 +16,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const braveURL = makeBraveSearchURL(query);
+    console.log(`[Brave Search] Fetching URL: ${braveURL}`);
+
     const res = await fetch(braveURL, {
       headers: {
         // Using a standard browser User-Agent to avoid being blocked.
@@ -27,32 +28,40 @@ export async function GET(req: NextRequest) {
     });
 
     if (!res.ok) {
-        throw new Error(`Brave search failed with status: ${res.status}`);
+      console.error(`[Brave Search] Fetch failed with status: ${res.status}`);
+      throw new Error(`Brave search failed with status: ${res.status}`);
     }
+    
+    console.log(`[Brave Search] Fetch successful with status: ${res.status}`);
 
     const html = await res.text();
     const $ = cheerio.load(html);
 
     // This is a more robust selector for Brave/Bing search results.
-    const results = $('li.b_algo h2 a').map((i, el) => {
-        const href = $(el).attr('href');
-        const title = $(el).text();
-        // Ensure we only grab valid PDF or TXT links.
-        if (href && (href.toLowerCase().endsWith('.pdf') || href.toLowerCase().endsWith('.txt'))) {
-            return {
-                title,
-                link: href,
-                type: href.toLowerCase().endsWith('.pdf') ? 'pdf' : 'txt',
-            };
-        }
-        return null;
+    const allFoundLinks = $('li.b_algo h2 a').map((i, el) => {
+        return {
+            title: $(el).text(),
+            href: $(el).attr('href'),
+        };
     }).get();
+
+    console.log(`[Brave Search] Found ${allFoundLinks.length} total result links from selector 'li.b_algo h2 a'.`);
+
+    const results = allFoundLinks.filter(link => 
+        link.href && (link.href.toLowerCase().endsWith('.pdf') || link.href.toLowerCase().endsWith('.txt'))
+    ).map(link => ({
+        title: link.title,
+        link: link.href!,
+        type: link.href!.toLowerCase().endsWith('.pdf') ? 'pdf' : 'txt',
+    }));
+    
+    console.log(`[Brave Search] Found ${results.length} valid PDF/TXT links after filtering.`);
 
     // Return the first 5 valid results.
     return NextResponse.json(results.slice(0, 5));
 
   } catch(error) {
-    console.error("Error during Brave search scraping:", error);
+    console.error("[Brave Search] An error occurred in the search route:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
     return NextResponse.json({ error: 'Failed to scrape Brave results', details: errorMessage }, { status: 500 });
   }
