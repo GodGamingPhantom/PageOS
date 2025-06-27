@@ -286,52 +286,67 @@ function Reader() {
         )}
       </header>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="relative mx-auto w-full max-w-3xl overflow-hidden px-4 pt-12 pb-24">
-           {isLoading ? (
-             <div className="flex flex-col items-center gap-4 pt-16">
+      <main className="flex-1 overflow-y-auto px-4 pt-12 pb-24">
+        <div className="w-full max-w-3xl mx-auto">
+          {/* 
+            This is the animation "viewport". It's a stable, non-animating container.
+            - `relative` anchors the absolutely positioned children.
+            - `overflow-hidden` clips the animations, preventing them from affecting the layout.
+            - `min-h` prevents the container from collapsing on short content, stopping vertical jumps.
+          */}
+          <div className="relative overflow-hidden min-h-[calc(100vh-20rem)]">
+            {isLoading ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                 <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
                 <p>Rendering Transmission...</p>
               </div>
-          ) : error ? (
-            <div className="flex flex-col items-center gap-4 pt-16 text-destructive">
-              <AlertTriangle className="h-8 w-8" />
-              <p className="font-headline">TRANSMISSION_ERROR</p>
-              <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
-            </div>
-          ) : (
-            <AnimatePresence initial={false} custom={direction}>
-              {currentSector ? (
-                <motion.div
-                  key={activeSector}
-                  custom={direction}
-                  variants={variants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-                >
-                  <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                    ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+            ) : error ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-destructive">
+                <AlertTriangle className="h-8 w-8" />
+                <p className="font-headline">TRANSMISSION_ERROR</p>
+                <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+              </div>
+            ) : (
+              <AnimatePresence initial={false} custom={direction}>
+                {currentSector ? (
+                  <motion.div
+                    key={activeSector}
+                    custom={direction}
+                    variants={variants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: "spring", stiffness: 300, damping: 30 },
+                      opacity: { duration: 0.2 },
+                    }}
+                    // This is the critical change: `absolute` positioning takes the animating
+                    // element out of the document's layout flow. Its size and position
+                    // changes can no longer affect any other elements.
+                    className="absolute w-full"
+                  >
+                    <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                      ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                    </div>
+                    <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                      {currentSector.map((para, pi) => (
+                        <p key={pi} className="sector-paragraph">
+                          {para.trim()}
+                        </p>
+                      ))}
+                    </div>
+                    <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+                      MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="absolute inset-0 flex-1 grid place-items-center">
+                    <p>No content to display.</p>
                   </div>
-                  <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                    {currentSector.map((para, pi) => (
-                      <p key={pi} className="sector-paragraph">
-                        {para.trim()}
-                      </p>
-                    ))}
-                  </div>
-                  <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                    MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-                  </div>
-                </motion.div>
-              ) : (
-                <div className="flex-1 grid place-items-center pt-16">
-                  <p>No content to display.</p>
-                </div>
-              )}
-            </AnimatePresence>
-          )}
+                )}
+              </AnimatePresence>
+            )}
+          </div>
         </div>
       </main>
 
