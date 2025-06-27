@@ -349,11 +349,14 @@ function Reader() {
   return (
     <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col overflow-x-hidden">
       {header}
-
+  
       <main className="flex-1 overflow-y-auto px-4 pt-8 pb-28">
-        <div className="w-full max-w-3xl mx-auto">
+        <div className="relative w-full max-w-3xl mx-auto overflow-hidden">
+          <div className="relative">
             {!currentSector ? (
-              <div className="flex-1 grid place-items-center"><p>No content to display.</p></div>
+              <div className="flex-1 grid place-items-center">
+                <p>No content to display.</p>
+              </div>
             ) : (
               <AnimatePresence initial={false} custom={direction}>
                 <motion.div
@@ -367,38 +370,41 @@ function Reader() {
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 },
                   }}
-                  className="w-full"
+                  className="w-full overflow-x-hidden"
                 >
                   <div className="sector">
                     <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                        ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                      ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
                     </div>
                     <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                        {currentSector.map((para, pi) => (
-                            <p key={pi} className="sector-paragraph">{para.trim()}</p>
-                        ))}
+                      {currentSector.map((para, pi) => (
+                        <p key={pi} className="sector-paragraph">
+                          {para.trim()}
+                        </p>
+                      ))}
                     </div>
                     <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                        MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+                      MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
                     </div>
                   </div>
                 </motion.div>
               </AnimatePresence>
             )}
+          </div>
         </div>
       </main>
-
+  
       <div className="fixed bottom-4 left-0 right-0 z-50 pointer-events-none">
         <div className="w-full flex justify-center pointer-events-auto">
-          <ReaderControls
-            onPrev={goToPrevSector}
-            onNext={goToNextSector}
-            isFirst={activeSector === 0}
-            isLast={!sectors.length || activeSector === sectors.length - 1}
-          />
+            <ReaderControls
+              onPrev={goToPrevSector}
+              onNext={goToNextSector}
+              isFirst={activeSector === 0}
+              isLast={!sectors.length || activeSector === sectors.length - 1}
+            />
         </div>
       </div>
-
+  
       {showTOC && (
         <div className="fixed top-0 right-0 h-full w-full max-w-xs bg-background border-l border-border z-50 p-4 overflow-y-auto shadow-xl animate-in slide-in-from-right-full duration-300">
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/50">
