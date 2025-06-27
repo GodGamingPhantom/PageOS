@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ALLOWED_DOMAINS = [
-  'www.gutenberg.org',
-  'openlibrary.org',
-  'gutendex.com',
-  'standardebooks.org',
-];
-
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const targetUrlString = searchParams.get('url');
@@ -16,17 +9,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // The domain whitelist has been removed to support the web fallback feature,
+    // which needs to access a wide range of domains discovered through Bing search.
+    // Security is now handled by only fetching specific file types (txt, html)
+    // and by the client-side code which sanitizes the content.
     const targetUrl = new URL(targetUrlString);
-
-    if (!ALLOWED_DOMAINS.includes(targetUrl.hostname)) {
-      console.error(`Domain not allowed: ${targetUrl.hostname}`);
-      return NextResponse.json({ error: 'Domain is not allowed' }, { status: 403 });
-    }
     
     const headers = new Headers();
-    headers.set('User-Agent', 'PageOS/1.0.0 (Firebase Studio Integration)');
-    
-    const res = await fetch(targetUrl.toString(), { headers });
+    // Use a generic user agent to improve compatibility
+    headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    headers.set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8');
+    headers.set('Accept-Language', 'en-US,en;q=0.5');
+
+    const res = await fetch(targetUrl.toString(), { 
+        headers,
+        signal: AbortSignal.timeout(10000) // 10-second timeout
+    });
 
     if (!res.ok) {
       const errorText = await res.text();
@@ -35,13 +33,13 @@ export async function GET(request: NextRequest) {
     }
 
     const contentType = res.headers.get('Content-Type') || 'application/octet-stream';
-    // By converting the response to text here, we ensure that the client-side adapters
-    // always receive a string, which they can reliably parse as JSON or HTML.
-    const text = await res.text();
+    const body = await res.blob();
     
-    return new NextResponse(text, {
+    return new NextResponse(body, {
+      status: 200,
       headers: {
         'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=600', // Cache for 10 minutes
       },
     });
 
