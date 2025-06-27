@@ -98,12 +98,11 @@ function Reader() {
     for (let i = 0; i < paragraphs.length; i += SECTOR_SIZE) {
       const sectorParas = paragraphs.slice(i, i + SECTOR_SIZE);
 
-      // ✨ Detect heading-style paragraphs
       const heading = sectorParas.find(p =>
-        /^chapter\s+\d+/i.test(p.trim()) ||          // CHAPTER 1
-        /^CHAPTER\b/i.test(p.trim()) ||              // CHAPTER
-        /^[IVXLCDM]+\.\s/i.test(p.trim()) ||         // I. THE BEGINNING
-        /^PART\s+[A-Z]+/i.test(p.trim())             // PART ONE
+        /^chapter\s+\d+/i.test(p.trim()) ||
+        /^CHAPTER\b/i.test(p.trim()) ||
+        /^[IVXLCDM]+\.\s/i.test(p.trim()) ||
+        /^PART\s+[A-Z]+/i.test(p.trim())
       );
 
       if (heading) {
@@ -116,7 +115,7 @@ function Reader() {
       newSectors.push(sectorParas);
     }
 
-    setToc(newTOC); // ✅ Store TOC in state
+    setToc(newTOC);
     return newSectors;
   }, [content]);
 
@@ -381,16 +380,16 @@ function Reader() {
         <div className="relative w-full max-w-4xl h-full px-4 flex items-center justify-center overflow-y-auto">
           {renderContent()}
         </div>
-
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
-          <ReaderControls
-            onPrev={goToPrevSector}
-            onNext={goToNextSector}
-            isFirst={activeSector === 0}
-            isLast={!sectors.length || activeSector === sectors.length - 1}
-          />
-        </div>
       </main>
+
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-10">
+        <ReaderControls
+          onPrev={goToPrevSector}
+          onNext={goToNextSector}
+          isFirst={activeSector === 0}
+          isLast={!sectors.length || activeSector === sectors.length - 1}
+        />
+      </div>
 
       {showTOC && (
         <div className="fixed top-0 right-0 h-full w-full max-w-xs bg-background border-l border-border z-50 p-4 overflow-y-auto shadow-xl animate-in slide-in-from-right-full duration-300">
