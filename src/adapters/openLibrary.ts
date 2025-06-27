@@ -45,11 +45,37 @@ export async function fetchOpenLibrary(query: string): Promise<MappedOpenLibrary
     }));
 }
 
-export async function fetchOpenLibraryContent(editionKey: string): Promise<string> {
-  const url = `https://openlibrary.org/books/${editionKey}.txt`;
-  const res = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch book content from Open Library for edition ${editionKey}`);
+export async function fetchOpenLibraryContent(editionKey: string): Promise<string | null> {
+  // Primary strategy: Fetch the .txt file directly.
+  const txtUrl = `https://openlibrary.org/books/${editionKey}.txt`;
+  const txtRes = await fetch(`/api/proxy?url=${encodeURIComponent(txtUrl)}`);
+
+  if (txtRes.ok) {
+    const textContent = await txtRes.text();
+    // Some .txt files on OpenLibrary are just redirect pages or empty. Check for actual content.
+    if (textContent && textContent.length > 100 && !textContent.toLowerCase().includes('redirect')) {
+      return textContent;
+    }
   }
-  return await res.text();
+
+  // Fallback strategy: Scrape the HTML page. This is less reliable.
+  // Note: OpenLibrary's HTML structure varies. This may not work for all books.
+  const htmlUrl = `https://openlibrary.org/books/${editionKey}/read`;
+  const htmlRes = await fetch(`/api/proxy?url=${encodeURIComponent(htmlUrl)}`);
+  if (!htmlRes.ok) {
+    return null; // Both attempts failed.
+  }
+
+  const html = await htmlRes.text();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  
+  // The reader content is often inside an element with this class.
+  const contentContainer = doc.querySelector(".book-page-text");
+  
+  if (contentContainer) {
+    return contentContainer.textContent || null;
+  }
+  
+  return null; // Could not find a readable content container.
 }

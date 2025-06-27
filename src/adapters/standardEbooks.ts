@@ -41,12 +41,12 @@ export async function searchStandardEbooks(query: string): Promise<MappedStandar
 }
 
 
-export async function fetchStandardEbooksBookContent(slug: string): Promise<string> {
+export async function fetchStandardEbooksBookContent(slug: string): Promise<string | null> {
   const url = `https://standardebooks.org/ebooks/${slug}/text/single-page`;
   const res = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
   
   if (!res.ok) {
-    throw new Error(`Failed to fetch book content from Standard Ebooks for slug ${slug}`);
+    return null;
   }
   const html = await res.text();
 
@@ -54,9 +54,12 @@ export async function fetchStandardEbooksBookContent(slug: string): Promise<stri
   const doc = parser.parseFromString(html, 'text/html');
 
   const mainContent = doc.querySelector('section.main');
-  if (!mainContent) throw new Error("Unable to locate book content for Standard Ebook");
+  if (!mainContent) {
+    return null;
+  }
 
   // Extract text from all relevant tags to reconstruct the book content.
   const paragraphs = Array.from(mainContent.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote'));
-  return paragraphs.map(p => p.textContent?.trim()).filter(Boolean).join('\n\n');
+  const content = paragraphs.map(p => p.textContent?.trim()).filter(Boolean).join('\n\n');
+  return content || null;
 }
