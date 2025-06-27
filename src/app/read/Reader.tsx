@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, List, Bookmark, Settings, LoaderCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import TOCModal from './TOCModal';
 import { useAuth } from '@/context/auth-provider';
 import useBookLoader from '@/hooks/useBookLoader';
 import useBookmark from '@/hooks/useBookmark';
-import ReaderControls from '@/components/ReaderControls';
+import ReaderControls from './ReaderControls';
 
 const Reader = () => {
   const searchParams = useSearchParams();
@@ -38,13 +38,30 @@ const Reader = () => {
 
   const [showTOC, setShowTOC] = useState(false);
 
-  const paginate = (delta: number) => {
+  const paginate = useCallback((delta: number) => {
     const newIndex = activeSector + delta;
     if (newIndex >= 0 && newIndex < sectors.length) {
       setDirection(delta);
       setActiveSector(newIndex);
     }
-  };
+  }, [activeSector, sectors.length, setDirection, setActiveSector]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        paginate(-1);
+      } else if (e.key === 'ArrowRight') {
+        paginate(1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [paginate]);
+
 
   const header = (
     <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground h-[41px] shrink-0">
@@ -95,13 +112,15 @@ const Reader = () => {
       <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
         MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
       </div>
+      {/* breathing space below MEM.STREAM */}
+      <div className="h-24" />
     </div>
   ) : (
     <div className="flex items-center justify-center h-full text-muted-foreground">
       No content to display.
     </div>
   );
-
+  
   if (isLoading) return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] items-center justify-center gap-4">
       <LoaderCircle className="h-6 w-6 animate-spin text-accent" />
@@ -120,8 +139,8 @@ const Reader = () => {
   return (
     <div className="flex flex-col overflow-x-hidden h-[calc(100vh-3.5rem)]">
       {header}
-      <main className="flex-1 overflow-y-auto relative px-4 pt-12 pb-32">
-        <div className="max-w-3xl mx-auto w-full min-h-[calc(100vh-12rem)] relative isolate">
+      <main className="flex-1 overflow-y-auto relative px-4 pt-12 pb-48">
+        <div className="max-w-3xl mx-auto w-full min-h-[calc(100vh-12rem)] relative">
           <div className="invisible">
               {sectorContent}
           </div>
@@ -133,7 +152,7 @@ const Reader = () => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: direction < 0 ? '100%' : '-100%', opacity: 0 }}
               transition={{
-                x: { type: 'spring', stiffness: 300, damping: 30 },
+                x: { type: 'spring', stiffness: 220, damping: 30 },
                 opacity: { duration: 0.2 }
               }}
               className="absolute inset-0"
