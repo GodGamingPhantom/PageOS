@@ -1,7 +1,9 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
 function makeBraveSearchURL(query: string) {
+  // This query is crafted to find free, full-text ebooks in PDF or TXT format.
   const finalQuery = `${query} ebook free filetype:pdf OR filetype:txt`;
   return `https://search.brave.com/search?q=${encodeURIComponent(finalQuery)}&source=web`;
 }
@@ -29,7 +31,8 @@ export async function GET(req: NextRequest) {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    const results = $('a.result-header').map((i, el) => {
+    // Use a more specific and robust selector to find the result links
+    const results = $('li.b_algo h2 a').map((i, el) => {
         const href = $(el).attr('href');
         const title = $(el).text();
         if (href && (href.includes('.pdf') || href.includes('.txt'))) {
