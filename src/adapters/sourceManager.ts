@@ -44,26 +44,27 @@ export async function searchBooksAcrossSources(query: string, enabledSources?: S
   return results.flat();
 }
 
-
 export async function fetchBookContent(book: SearchResult): Promise<string | Blob> {
   let content: string | Blob | null = null;
+
   switch (book.source) {
-    case 'gutendex': 
+    case 'gutendex':
       // This adapter handles its own fallbacks and throws errors internally.
       return await gutendex.fetchGutenbergBookContent(book.formats);
-    case 'openLibrary': 
+    case 'openLibrary':
       content = await openLibrary.fetchOpenLibraryContent(book.edition);
       break;
     case 'standardEbooks':
       content = await standardEbooks.fetchStandardEbooksBookContent(book.slug);
       break;
-    default: 
+    default:
+      // This is a safety net for exhaustiveness checking.
       const _exhaustiveCheck: never = book;
-      throw new Error('Unknown source');
+      throw new Error('Unknown or unsupported book source.');
   }
 
   if (!content) {
-    throw new Error(`Failed to extract readable content from ${book.source}. The source might not provide a compatible text format for this specific book.`);
+    throw new Error(`Failed to extract readable content from ${book.source}. The source might not provide a compatible text format for this specific book, or the request may have been blocked.`);
   }
   
   return content;

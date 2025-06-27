@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { MappedStandardEbook } from './sourceManager';
@@ -21,7 +22,6 @@ export async function searchStandardEbooks(query: string): Promise<MappedStandar
     const titleLink = entry.querySelector('a[href^="/ebooks/"]') as HTMLAnchorElement;
     if (!titleLink) return null;
 
-    // The author and title are both within the same link tag as paragraphs.
     const author = titleLink.querySelector('p.author')?.textContent?.trim() || 'Unknown';
     const title = titleLink.querySelector('p:not(.author)')?.textContent?.trim();
     
@@ -40,7 +40,6 @@ export async function searchStandardEbooks(query: string): Promise<MappedStandar
   }).filter((book): book is MappedStandardEbook => book !== null);
 }
 
-
 export async function fetchStandardEbooksBookContent(slug: string): Promise<string | null> {
   const url = `https://standardebooks.org/ebooks/${slug}/text/single-page`;
   const res = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
@@ -58,8 +57,10 @@ export async function fetchStandardEbooksBookContent(slug: string): Promise<stri
     return null;
   }
 
-  // Extract text from all relevant tags to reconstruct the book content.
-  const paragraphs = Array.from(mainContent.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote'));
-  const content = paragraphs.map(p => p.textContent?.trim()).filter(Boolean).join('\n\n');
-  return content || null;
+  // Extract text from all semantic block-level tags to reconstruct the book content.
+  const blocks = mainContent.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote');
+  const textChunks = Array.from(blocks).map(block => block.textContent?.trim() || '');
+
+  // Join the chunks with double newlines to create paragraph breaks.
+  return textChunks.filter(Boolean).join('\n\n');
 }

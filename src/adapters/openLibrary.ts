@@ -22,8 +22,6 @@ export type MappedOpenLibraryBook = {
 
 export async function fetchOpenLibrary(query: string): Promise<MappedOpenLibraryBook[]> {
   if (!query) return [];
-  // Note: has_fulltext=true combined with needing an edition_key for a .txt file is very restrictive.
-  // We rely on edition_key to ensure we can actually fetch plain text content.
   const apiUrl = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=20&has_fulltext=true`;
   const res = await fetch(`/api/proxy?url=${encodeURIComponent(apiUrl)}`);
   if (!res.ok) {
@@ -32,7 +30,6 @@ export async function fetchOpenLibrary(query: string): Promise<MappedOpenLibrary
   }
   const data: OpenLibraryAPIResponse = await res.json();
 
-  // Filter for books that have an edition key, as we need it to get the .txt file.
   return data.docs
     .filter(book => book.edition_key && book.edition_key.length > 0)
     .map(book => ({
@@ -40,26 +37,25 @@ export async function fetchOpenLibrary(query: string): Promise<MappedOpenLibrary
       title: book.title,
       authors: book.author_name?.join(', ') || 'Unknown',
       cover: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : null,
-      edition: book.edition_key![0], // We can use ! here because we've filtered for it
+      edition: book.edition_key![0],
       source: 'openLibrary'
     }));
 }
 
 export async function fetchOpenLibraryContent(editionKey: string): Promise<string | null> {
-  // Primary strategy: Fetch the .txt file directly.
+  // Strategy 1: Attempt to fetch the direct .txt file.
   const txtUrl = `https://openlibrary.org/books/${editionKey}.txt`;
   const txtRes = await fetch(`/api/proxy?url=${encodeURIComponent(txtUrl)}`);
 
   if (txtRes.ok) {
     const textContent = await txtRes.text();
-    // Some .txt files on OpenLibrary are just redirect pages or empty. Check for actual content.
-    if (textContent && textContent.length > 100 && !textContent.toLowerCase().includes('redirect')) {
+    // A valid .txt file should have substantial content and not be an HTML redirect page.
+    if (textContent && textContent.length > 200 && !textContent.toLowerCase().includes('<html')) {
       return textContent;
     }
   }
 
-  // Fallback strategy: Scrape the HTML page. This is less reliable.
-  // Note: OpenLibrary's HTML structure varies. This may not work for all books.
+  // Fallback Strategy: If .txt fails, scrape the HTML read page.
   const htmlUrl = `https://openlibrary.org/books/${editionKey}/read`;
   const htmlRes = await fetch(`/api/proxy?url=${encodeURIComponent(htmlUrl)}`);
   if (!htmlRes.ok) {
@@ -70,7 +66,7 @@ export async function fetchOpenLibraryContent(editionKey: string): Promise<strin
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
   
-  // The reader content is often inside an element with this class.
+  // This class is commonly used for the main text container on Open Library's reader.
   const contentContainer = doc.querySelector(".book-page-text");
   
   if (contentContainer) {
