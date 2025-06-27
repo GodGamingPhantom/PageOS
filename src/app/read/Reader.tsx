@@ -96,7 +96,7 @@ export default function Reader() {
       </div>
 
       {/* CONTENT */}
-      <main className="flex-1 overflow-y-auto px-4 pt-12 pb-24">
+      <main className="flex-1 overflow-y-auto px-4 pt-12 pb-64">
         <div className="relative max-w-3xl mx-auto h-full min-h-[65vh] isolate">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
