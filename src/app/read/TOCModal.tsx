@@ -13,8 +13,8 @@ type Props = {
 
 export default function TOCModal({ toc, activeSector, onClose, onSelect }: Props) {
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md mx-auto p-6 bg-card rounded-md shadow-xl border border-border">
+    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in-50">
+      <div className="relative w-full max-w-md mx-auto p-6 bg-card rounded-md shadow-xl border border-border animate-in fade-in-90 slide-in-from-bottom-10 duration-500 ease-in-out">
         <div className="flex items-center justify-between mb-4 border-b border-border pb-2">
           <h2 className="text-sm font-headline text-accent">Table of Contents</h2>
           <Button size="icon" variant="ghost" onClick={onClose}>
