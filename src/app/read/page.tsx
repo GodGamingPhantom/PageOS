@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { fetchWebBookContent } from '@/adapters/web';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
@@ -66,7 +66,6 @@ function Reader() {
   const router = useRouter();
   
   const [book, setBook] = useState<SearchResult | WebBook | null>(null);
-  // This state holds the entire book content as one large string.
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,38 +76,46 @@ function Reader() {
   const [libraryBook, setLibraryBook] = useState<LibraryBook | null>(null);
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
   
-  // `activeSector` is the index of the currently displayed page/sector.
   const [activeSector, setActiveSector] = useState(0);
   const [direction, setDirection] = useState(0);
+
+  const [toc, setToc] = useState<{ title: string; sectorIndex: number }[]>([]);
+  const [showTOC, setShowTOC] = useState(false);
 
   const isWebBook = book?.source === 'web';
   const isBookmarked = !!libraryBook && !isWebBook;
   
-  // This `useMemo` block is the core of the text segmentation logic.
-  // It takes the raw `content` string and splits it into sectors.
-  // `useMemo` ensures this expensive operation only runs when `content` changes.
   const sectors = useMemo(() => {
     if (!content) return [];
 
-    // STEP 1: Split the entire text into an array of paragraphs.
-    // The regular expression `/\n\s*\n/` looks for one or more blank lines
-    // between paragraphs, which is a common pattern in plain text ebooks.
-    // We also filter out any resulting empty strings.
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
-    
     const newSectors = [];
-    // Define how many paragraphs should be in each sector (page).
+    const newTOC: { title: string; sectorIndex: number }[] = [];
+
     const SECTOR_SIZE = 4;
-    
-    // STEP 2: Group the paragraphs into sectors.
-    // We loop through the `paragraphs` array, taking `SECTOR_SIZE` paragraphs at a time.
+
     for (let i = 0; i < paragraphs.length; i += SECTOR_SIZE) {
-        // `slice` creates a new array containing a chunk of paragraphs.
-        newSectors.push(paragraphs.slice(i, i + SECTOR_SIZE));
+      const sectorParas = paragraphs.slice(i, i + SECTOR_SIZE);
+
+      // ✨ Detect heading-style paragraphs
+      const heading = sectorParas.find(p =>
+        /^chapter\s+\d+/i.test(p.trim()) ||          // CHAPTER 1
+        /^CHAPTER\b/i.test(p.trim()) ||              // CHAPTER
+        /^[IVXLCDM]+\.\s/i.test(p.trim()) ||         // I. THE BEGINNING
+        /^PART\s+[A-Z]+/i.test(p.trim())             // PART ONE
+      );
+
+      if (heading) {
+        newTOC.push({
+          title: heading.trim().split('\n')[0],
+          sectorIndex: newSectors.length,
+        });
+      }
+
+      newSectors.push(sectorParas);
     }
-    
-    // The final result is an array of arrays, e.g.,
-    // [ ['para1', 'para2', ...], ['para5', 'para6', ...] ]
+
+    setToc(newTOC); // ✅ Store TOC in state
     return newSectors;
   }, [content]);
 
@@ -145,14 +152,11 @@ function Reader() {
                 title: title,
                 authors: 'Source: Web',
             };
-            // For web books, we use a different fetcher.
             loadedContent = await fetchWebBookContent(url);
 
         } else {
-          // For internal sources, parse the book data from URL params...
           currentBook = parseBookFromParams(searchParams);
           if (currentBook) {
-            // ...and fetch the content using our source manager.
             loadedContent = await fetchBookContent(currentBook);
           }
         }
@@ -161,9 +165,7 @@ function Reader() {
           throw new Error("Book data is incomplete or invalid.");
         }
         setBook(currentBook);
-
-        // Once fetched, the raw text string is stored in the `content` state.
-        // This will trigger the `useMemo` hook above to segment the text.
+        
         if (typeof loadedContent === 'string') {
           setContent(loadedContent);
         } else if (loadedContent) {
@@ -298,7 +300,6 @@ function Reader() {
         </div>
       );
     }
-    // Get the content for the current page from our `sectors` array.
     const currentSector = sectors[activeSector];
     if (!currentSector) return <div className="flex-1 grid place-items-center"><p>No content to display.</p></div>;
     
@@ -322,7 +323,6 @@ function Reader() {
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                 ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
             </div>
-            {/* We map over the paragraphs in the current sector and render each one. */}
             <div className="sector-body max-w-3xl w-full space-y-4 font-reader text-base leading-relaxed text-foreground/90 px-4 py-8">
                 {currentSector.map((para, pi) => (
                     <p key={pi} className="sector-paragraph">{para.trim()}</p>
@@ -347,6 +347,17 @@ function Reader() {
           <span className="truncate">{`TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id.slice(-20) || '...'}`}</span>
         </div>
         <div className="flex items-center gap-2">
+          {toc.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Table of Contents"
+              onClick={() => setShowTOC(true)}
+              title="Table of Contents"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -379,6 +390,34 @@ function Reader() {
           />
         </div>
       </main>
+
+      {showTOC && (
+        <div className="fixed top-0 right-0 h-full w-full max-w-xs bg-background border-l border-border z-50 p-4 overflow-y-auto shadow-xl animate-in slide-in-from-right-full duration-300">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/50">
+            <h2 className="text-sm font-headline text-accent">Table of Contents</h2>
+            <Button size="icon" variant="ghost" onClick={() => setShowTOC(false)} className="h-6 w-6">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+          <div className="space-y-1 text-sm">
+            {toc.length === 0 && <p className="text-muted-foreground text-xs p-2">No chapters found.</p>}
+            {toc.map(({ title, sectorIndex }, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setActiveSector(sectorIndex);
+                  setDirection(sectorIndex > activeSector ? 1 : -1);
+                  setShowTOC(false);
+                }}
+                className="block w-full text-left p-2 rounded-md hover:bg-accent/10 hover:text-accent transition-colors"
+              >
+                {title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
