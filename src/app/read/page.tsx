@@ -382,13 +382,15 @@ function Reader() {
         </div>
       </main>
 
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-10">
-        <ReaderControls
-          onPrev={goToPrevSector}
-          onNext={goToNextSector}
-          isFirst={activeSector === 0}
-          isLast={!sectors.length || activeSector === sectors.length - 1}
-        />
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+        <div className="pointer-events-auto">
+          <ReaderControls
+            onPrev={goToPrevSector}
+            onNext={goToNextSector}
+            isFirst={activeSector === 0}
+            isLast={!sectors.length || activeSector === sectors.length - 1}
+          />
+        </div>
       </div>
 
       {showTOC && (
