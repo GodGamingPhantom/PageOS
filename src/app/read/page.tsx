@@ -277,8 +277,8 @@ function Reader() {
   };
 
   const header = (
-    <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground">
-      <div className="flex items-center gap-2">
+    <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground shrink-0">
+      <div className="flex items-center gap-2 min-w-0">
         <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -319,22 +319,14 @@ function Reader() {
 
   const currentSector = sectors[activeSector];
 
-  // This is the new, stable layout structure.
-  // It's designed to be a clean prototype for rebuilding.
   return (
-    // 1. The main container. It controls the overall page structure and prevents horizontal overflow.
     <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-x-hidden">
       
-      {/* 2. The header remains fixed at the top. It is not part of the scrollable area. */}
       {header}
 
-      {/* 3. The main scrollable area. It has padding to prevent content from being hidden by the fixed header and controls. */}
       <main className="flex-1 overflow-y-auto">
-        
-        {/* 4. A stable centering container. This div is NOT animated. It uses a max-width and margin-auto to reliably center its children. */}
-        <div className="mx-auto w-full max-w-3xl px-4 py-12">
+        <div className="mx-auto w-full max-w-3xl px-4 py-12 min-h-full">
           
-          {/* 5. The animation container. This is where Framer Motion does its work. Its animations are now safely contained and cannot affect the page layout. */}
           {isLoading ? (
              <div className="flex flex-col items-center gap-4 pt-16">
                 <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
@@ -360,7 +352,7 @@ function Reader() {
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 },
                   }}
-                  className="w-full" // Ensures the motion div fills its parent
+                  className="w-full"
                 >
                   <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                     ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
@@ -387,7 +379,6 @@ function Reader() {
         </div>
       </main>
 
-      {/* 6. The fixed navigation controls. They are positioned relative to the viewport and are completely independent of the scrollable content. */}
       {!isLoading && !error && (
         <div className="fixed bottom-4 left-0 right-0 z-50 pointer-events-none">
             <div className="flex w-full justify-center pointer-events-auto">
@@ -401,7 +392,6 @@ function Reader() {
         </div>
       )}
 
-      {/* 7. The TOC Modal remains unchanged. It is also positioned relative to the viewport. */}
       {showTOC && (
         <TOCModal
           toc={toc}
