@@ -11,6 +11,7 @@ import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
+import TOCModal from './TOCModal';
 
 function parseBookFromParams(params: URLSearchParams): SearchResult | null {
     const bookData = Object.fromEntries(params.entries());
@@ -351,7 +352,7 @@ function Reader() {
       {header}
   
       <main className="flex-1 overflow-y-auto px-4 pt-8 pb-28">
-        <div className="relative w-full max-w-3xl mx-auto overflow-hidden">
+        <div className="relative w-full max-w-3xl mx-auto">
           <div className="relative">
             {!currentSector ? (
               <div className="flex-1 grid place-items-center">
@@ -370,7 +371,7 @@ function Reader() {
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 },
                   }}
-                  className="w-full overflow-x-hidden"
+                  className="w-full"
                 >
                   <div className="sector">
                     <div className="sector-header font-headline text-xs text-accent/80 mb-4">
@@ -406,31 +407,15 @@ function Reader() {
       </div>
   
       {showTOC && (
-        <div className="fixed top-0 right-0 h-full w-full max-w-xs bg-background border-l border-border z-50 p-4 overflow-y-auto shadow-xl animate-in slide-in-from-right-full duration-300">
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-border/50">
-            <h2 className="text-sm font-headline text-accent">Table of Contents</h2>
-            <Button size="icon" variant="ghost" onClick={() => setShowTOC(false)} className="h-6 w-6">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </div>
-          <div className="space-y-1 text-sm">
-            {toc.length === 0 && <p className="text-muted-foreground text-xs p-2">No chapters found.</p>}
-            {toc.map(({ title, sectorIndex }, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setActiveSector(sectorIndex);
-                  setDirection(sectorIndex > activeSector ? 1 : -1);
-                  setShowTOC(false);
-                }}
-                className="block w-full text-left p-2 rounded-md hover:bg-accent/10 hover:text-accent transition-colors"
-              >
-                {title}
-              </button>
-            ))}
-          </div>
-        </div>
+        <TOCModal
+          toc={toc}
+          activeSector={activeSector}
+          onClose={() => setShowTOC(false)}
+          onSelect={(sectorIndex) => {
+            setDirection(sectorIndex > activeSector ? 1 : -1);
+            setActiveSector(sectorIndex);
+          }}
+        />
       )}
     </div>
   );
