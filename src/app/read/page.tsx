@@ -80,14 +80,13 @@ function Reader() {
   const [activeSector, setActiveSector] = useState(0);
   const [direction, setDirection] = useState(0);
 
-  const [toc, setToc] = useState<{ title: string; sectorIndex: number }[]>([]);
   const [showTOC, setShowTOC] = useState(false);
 
   const isWebBook = book?.source === 'web';
   const isBookmarked = !!libraryBook && !isWebBook;
   
-  const sectors = useMemo(() => {
-    if (!content) return [];
+  const { sectors, toc } = useMemo(() => {
+    if (!content) return { sectors: [], toc: [] };
 
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
     const newSectors = [];
@@ -114,9 +113,8 @@ function Reader() {
 
       newSectors.push(sectorParas);
     }
-
-    setToc(newTOC);
-    return newSectors;
+    
+    return { sectors: newSectors, toc: newTOC };
   }, [content]);
 
   const paginate = (newDirection: number) => {
