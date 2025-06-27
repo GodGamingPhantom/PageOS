@@ -253,7 +253,60 @@ function Reader() {
     exit: (direction: number) => ({ zIndex: 0, x: direction < 0 ? '100%' : '-100%', opacity: 0 }),
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-3.5rem)] flex-col">
+        <header className="flex items-center p-2 border-b border-border/50 text-xs text-muted-foreground shrink-0 h-[41px]">
+           <span className="truncate">LOADING...</span>
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
+          <p>Rendering Transmission...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+     return (
+      <div className="flex h-[calc(100vh-3.5rem)] flex-col">
+        <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground shrink-0 h-[41px]">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+           <span className="truncate">ERROR</span>
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-destructive">
+          <AlertTriangle className="h-8 w-8" />
+          <p className="font-headline">TRANSMISSION_ERROR</p>
+          <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   const currentSector = sectors[activeSector];
+  const sectorContent = currentSector ? (
+    <div className="sector">
+      <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+        ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+      </div>
+      <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+        {currentSector.map((para, pi) => (
+          <p key={pi} className="sector-paragraph">
+            {para.trim()}
+          </p>
+        ))}
+      </div>
+      <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
+        MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+      </div>
+    </div>
+  ) : (
+    <div className="flex h-[calc(100vh-20rem)] flex-1 items-center justify-center">
+      <p>No content to display.</p>
+    </div>
+  );
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-x-hidden">
@@ -262,10 +315,9 @@ function Reader() {
           <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <span className="truncate">{isLoading ? 'LOADING...' : error ? 'ERROR' : `TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id.slice(-20) || '...'}`}</span>
+          <span className="truncate">{`TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id.slice(-20) || '...'}`}</span>
         </div>
-        {!isLoading && !error && book && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             {toc.length > 0 && (
               <Button variant="ghost" size="icon" aria-label="Table of Contents" onClick={() => setShowTOC(true)} title="Table of Contents">
                 <List className="h-4 w-4" />
@@ -282,70 +334,32 @@ function Reader() {
               {isBookmarkLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Bookmark className={`h-4 w-4 transition-colors ${isBookmarked ? 'fill-accent text-accent' : ''}`} />}
             </Button>
             <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => router.push('/settings')}><Settings className="h-4 w-4" /></Button>
-          </div>
-        )}
+        </div>
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 pt-12 pb-24">
         <div className="w-full max-w-3xl mx-auto">
-          {/* 
-            This is the animation "viewport". It's a stable, non-animating container.
-            - `relative` anchors the absolutely positioned children.
-            - `overflow-hidden` clips the animations, preventing them from affecting the layout.
-            - `min-h` prevents the container from collapsing on short content, stopping vertical jumps.
-          */}
-          <div className="relative overflow-hidden min-h-[calc(100vh-20rem)]">
-            {isLoading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
-                <p>Rendering Transmission...</p>
-              </div>
-            ) : error ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-destructive">
-                <AlertTriangle className="h-8 w-8" />
-                <p className="font-headline">TRANSMISSION_ERROR</p>
-                <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
-              </div>
-            ) : (
-              <AnimatePresence initial={false} custom={direction}>
-                {currentSector ? (
-                  <motion.div
-                    key={activeSector}
-                    custom={direction}
-                    variants={variants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                      x: { type: "spring", stiffness: 300, damping: 30 },
-                      opacity: { duration: 0.2 },
-                    }}
-                    // This is the critical change: `absolute` positioning takes the animating
-                    // element out of the document's layout flow. Its size and position
-                    // changes can no longer affect any other elements.
-                    className="absolute w-full"
-                  >
-                    <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                      ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-                    </div>
-                    <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                      {currentSector.map((para, pi) => (
-                        <p key={pi} className="sector-paragraph">
-                          {para.trim()}
-                        </p>
-                      ))}
-                    </div>
-                    <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                      MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-                    </div>
-                  </motion.div>
-                ) : (
-                  <div className="absolute inset-0 flex-1 grid place-items-center">
-                    <p>No content to display.</p>
-                  </div>
-                )}
-              </AnimatePresence>
-            )}
+          <div className="relative">
+            <div className="invisible" aria-hidden="true">
+              {sectorContent}
+            </div>
+            <AnimatePresence initial={false} custom={direction}>
+              <motion.div
+                key={activeSector}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 },
+                }}
+                className="absolute inset-0"
+              >
+               {sectorContent}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </main>
