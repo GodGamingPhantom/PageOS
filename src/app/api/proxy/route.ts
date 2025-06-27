@@ -35,9 +35,11 @@ export async function GET(request: NextRequest) {
     }
 
     const contentType = res.headers.get('Content-Type') || 'application/octet-stream';
-    const body = await res.blob();
+    // By converting the response to text here, we ensure that the client-side adapters
+    // always receive a string, which they can reliably parse as JSON or HTML.
+    const text = await res.text();
     
-    return new NextResponse(body, {
+    return new NextResponse(text, {
       headers: {
         'Content-Type': contentType,
       },
