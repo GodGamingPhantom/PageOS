@@ -317,58 +317,51 @@ function Reader() {
     </header>
   );
 
-  if (isLoading) {
-    return (
-      <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col">
-        {header}
-        <main className="flex-1 grid place-items-center">
-          <div className="flex flex-col items-center gap-4">
-            <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
-            <p>Rendering Transmission...</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col">
-        {header}
-        <main className="flex-1 grid place-items-center">
-          <div className="flex flex-col items-center gap-4 text-destructive">
-            <AlertTriangle className="h-8 w-8" />
-            <p className="font-headline">TRANSMISSION_ERROR</p>
-            <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   const currentSector = sectors[activeSector];
 
+  // This is the new, stable layout structure.
+  // It's designed to be a clean prototype for rebuilding.
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col overflow-x-hidden">
+    // 1. The main container. It controls the overall page structure and prevents horizontal overflow.
+    <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-x-hidden">
+      
+      {/* 2. The header remains fixed at the top. It is not part of the scrollable area. */}
       {header}
-  
-      <main className="flex-1 overflow-y-auto px-4 pt-8 pb-28">
-        <div className="w-full max-w-3xl mx-auto">
-          <AnimatePresence initial={false} custom={direction}>
-            {currentSector ? (
-              <motion.div
-                key={activeSector}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                }}
-                className="w-full"
-              >
-                <div className="sector w-full">
+
+      {/* 3. The main scrollable area. It has padding to prevent content from being hidden by the fixed header and controls. */}
+      <main className="flex-1 overflow-y-auto">
+        
+        {/* 4. A stable centering container. This div is NOT animated. It uses a max-width and margin-auto to reliably center its children. */}
+        <div className="mx-auto w-full max-w-3xl px-4 py-12">
+          
+          {/* 5. The animation container. This is where Framer Motion does its work. Its animations are now safely contained and cannot affect the page layout. */}
+          {isLoading ? (
+             <div className="flex flex-col items-center gap-4 pt-16">
+                <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
+                <p>Rendering Transmission...</p>
+              </div>
+          ) : error ? (
+            <div className="flex flex-col items-center gap-4 pt-16 text-destructive">
+              <AlertTriangle className="h-8 w-8" />
+              <p className="font-headline">TRANSMISSION_ERROR</p>
+              <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+            </div>
+          ) : (
+            <AnimatePresence initial={false} custom={direction}>
+              {currentSector ? (
+                <motion.div
+                  key={activeSector}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 },
+                  }}
+                  className="w-full" // Ensures the motion div fills its parent
+                >
                   <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                     ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
                   </div>
@@ -382,28 +375,33 @@ function Reader() {
                   <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
                     MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
                   </div>
+                </motion.div>
+              ) : (
+                <div className="flex-1 grid place-items-center pt-16">
+                  <p>No content to display.</p>
                 </div>
-              </motion.div>
-            ) : (
-               <div className="flex-1 grid place-items-center">
-                <p>No content to display.</p>
-              </div>
-            )}
-          </AnimatePresence>
+              )}
+            </AnimatePresence>
+          )}
+
         </div>
       </main>
-  
-      <div className="fixed bottom-4 left-0 right-0 z-50 pointer-events-none">
-        <div className="w-full flex justify-center pointer-events-auto">
-            <ReaderControls
-              onPrev={goToPrevSector}
-              onNext={goToNextSector}
-              isFirst={activeSector === 0}
-              isLast={!sectors.length || activeSector === sectors.length - 1}
-            />
+
+      {/* 6. The fixed navigation controls. They are positioned relative to the viewport and are completely independent of the scrollable content. */}
+      {!isLoading && !error && (
+        <div className="fixed bottom-4 left-0 right-0 z-50 pointer-events-none">
+            <div className="flex w-full justify-center pointer-events-auto">
+                <ReaderControls
+                onPrev={goToPrevSector}
+                onNext={goToNextSector}
+                isFirst={activeSector === 0}
+                isLast={!sectors.length || activeSector === sectors.length - 1}
+                />
+            </div>
         </div>
-      </div>
-  
+      )}
+
+      {/* 7. The TOC Modal remains unchanged. It is also positioned relative to the viewport. */}
       {showTOC && (
         <TOCModal
           toc={toc}
@@ -418,6 +416,7 @@ function Reader() {
     </div>
   );
 }
+
 
 export default function ReaderPage() {
   return (
