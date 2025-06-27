@@ -61,7 +61,7 @@ function Reader() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  const [book, setBook] = useState<SearchResult | null>(null);
+  const [book, setBook] = useState<SearchResult | { source: 'web-fallback', id: string, title: string, authors: string } | null>(null);
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +108,7 @@ function Reader() {
       const fallbackTitle = searchParams.get('title');
 
       try {
-        let currentBook: SearchResult | null = null;
+        let currentBook: SearchResult | { source: 'web-fallback', id: string, title: string, authors: string } | null = null;
         let loadedContent: string | Blob | null = null;
 
         if (fallbackUrl && fallbackTitle) {
@@ -174,7 +174,7 @@ function Reader() {
     if (!isBookmarked || !user || !book || sectors.length === 0 || isWebFallback) return;
 
     const handler = setTimeout(() => {
-        const bookId = generateBookId(book);
+        const bookId = generateBookId(book as SearchResult);
         const percentage = sectors.length > 0 ? ((activeSector + 1) / sectors.length) * 100 : 0;
         updateBookProgress(user.uid, bookId, {
             progress: Math.min(100, percentage),
@@ -205,7 +205,7 @@ function Reader() {
             setLibraryBook(null);
             toast({ title: "Bookmark Removed", description: `"${book.title}" removed from your archive.` });
         } else {
-            await addBookToLibrary(user.uid, book);
+            await addBookToLibrary(user.uid, book as SearchResult);
             const bookId = generateBookId(book);
             const newLibraryBook = await getLibraryBook(user.uid, bookId);
             setLibraryBook(newLibraryBook);
