@@ -3,42 +3,24 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle, Search } from "lucide-react";
-import type { SearchResponse } from "@/adapters/sourceManager";
-import { searchBooksAcrossSources } from "@/adapters/sourceManager";
 
 interface CommandSearchProps {
-  onResults: (results: SearchResponse) => void;
-  onLoading: (loading: boolean) => void;
+  onSearch: (query: string) => void;
 }
 
-export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
+export function CommandSearch({ onSearch }: CommandSearchProps) {
   const [value, setValue] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = async () => {
-    if (!value) {
-      onResults({ primary: [], fallback: [] });
-      return;
-    };
+  const handleSearchTrigger = async () => {
     setIsSearching(true);
-    onLoading(true);
-    try {
-      // With other sources removed, we no longer need to pass an array of enabled sources.
-      // The sourceManager will default to searching the only primary source: Gutendex.
-      const results = await searchBooksAcrossSources(value);
-      onResults(results);
-    } catch (error) {
-      console.error("Search failed:", error);
-      onResults({ primary: [], fallback: [] });
-    } finally {
-      setIsSearching(false);
-      onLoading(false);
-    }
+    await onSearch(value);
+    setIsSearching(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      handleSearch();
+      handleSearchTrigger();
     }
   };
 
@@ -59,14 +41,13 @@ export function CommandSearch({ onResults, onLoading }: CommandSearchProps) {
           className="w-full bg-input border-border/50 pl-14 h-12 text-lg focus:border-accent"
         />
         <button
-          onClick={handleSearch}
+          onClick={handleSearchTrigger}
           disabled={isSearching}
           className="absolute right-4 top-0 h-full text-accent/80 hover:text-accent transition-colors disabled:opacity-50"
         >
           {isSearching ? <LoaderCircle className="animate-spin" /> : <Search />}
         </button>
       </div>
-      {/* The filter popover has been removed as there is only one primary source now. */}
     </div>
   );
 }

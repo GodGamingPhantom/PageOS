@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
-import { fetchContentFromUrl } from '@/adapters/webFallback';
+import { fetchWebBookContent } from '@/adapters/web';
 import { Button } from '@/components/ui/button';
 import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
@@ -23,9 +23,7 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
     };
 
     if (book.source === 'gutendex' && bookData.formats) (book as any).formats = JSON.parse(bookData.formats);
-    else if (book.source === 'openLibrary' && bookData.edition) (book as any).edition = bookData.edition;
-    else if (book.source === 'standardEbooks' && bookData.slug) (book as any).slug = bookData.slug;
-
+    
     return book as SearchResult;
 }
 
@@ -56,12 +54,18 @@ const ReaderControls = ({ onPrev, onNext, isFirst, isLast }: { onPrev: () => voi
   );
 };
 
+type WebBook = {
+  source: 'web';
+  id: string; // The URL
+  title: string;
+  authors: string;
+}
 
 function Reader() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  const [book, setBook] = useState<SearchResult | { source: 'web-fallback', id: string, title: string, authors: string } | null>(null);
+  const [book, setBook] = useState<SearchResult | WebBook | null>(null);
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,9 +79,9 @@ function Reader() {
   const [activeSector, setActiveSector] = useState(0);
   const [direction, setDirection] = useState(0);
 
-  const isBookmarked = !!libraryBook;
-  const isWebFallback = book?.source === 'web-fallback';
-
+  const isWebBook = book?.source === 'web';
+  const isBookmarked = !!libraryBook && !isWebBook;
+  
   const sectors = useMemo(() => {
     if (!content) return [];
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
@@ -104,21 +108,26 @@ function Reader() {
     const loadBookData = async () => {
       setIsLoading(true);
       setError(null);
-      const fallbackUrl = searchParams.get('url');
-      const fallbackTitle = searchParams.get('title');
-
+      
+      const source = searchParams.get('source');
+      
       try {
-        let currentBook: SearchResult | { source: 'web-fallback', id: string, title: string, authors: string } | null = null;
+        let currentBook: SearchResult | WebBook | null = null;
         let loadedContent: string | Blob | null = null;
 
-        if (fallbackUrl && fallbackTitle) {
-          currentBook = {
-            id: fallbackUrl,
-            source: 'web-fallback' as any,
-            title: fallbackTitle,
-            authors: 'Source: Web',
-          };
-          loadedContent = await fetchContentFromUrl(fallbackUrl);
+        if (source === 'web') {
+            const url = searchParams.get('url');
+            const title = searchParams.get('title');
+            if (!url || !title) throw new Error("Web book URL or title is missing.");
+            
+            currentBook = {
+                id: url,
+                source: 'web',
+                title: title,
+                authors: 'Source: Web',
+            };
+            loadedContent = await fetchWebBookContent(url);
+
         } else {
           currentBook = parseBookFromParams(searchParams);
           if (currentBook) {
@@ -129,15 +138,17 @@ function Reader() {
         if (!currentBook) {
           throw new Error("Book data is incomplete or invalid.");
         }
-
         setBook(currentBook);
 
         if (typeof loadedContent === 'string') {
           setContent(loadedContent);
+        } else if (loadedContent) {
+           setError('Unsupported format. The reader can only display plain text or scraped HTML content.');
+           setContent(null);
         } else {
-          setError('Unsupported format. The reader can only display plain text or HTML content.');
-          setContent(null);
+            throw new Error("Failed to load or parse book content.");
         }
+
       } catch (e) {
         console.error(e);
         setError(e instanceof Error ? e.message : 'An unknown error occurred while loading the book.');
@@ -151,7 +162,7 @@ function Reader() {
   }, [searchParams]);
   
   useEffect(() => {
-    if (!user || !book || isWebFallback) {
+    if (!user || !book || isWebBook) {
         setLibraryBook(null);
         setIsBookmarkLoading(false);
         return;
@@ -168,10 +179,10 @@ function Reader() {
         })
         .finally(() => setIsBookmarkLoading(false));
 
-  }, [user, book, sectors.length, isWebFallback]);
+  }, [user, book, sectors.length, isWebBook]);
 
   useEffect(() => {
-    if (!isBookmarked || !user || !book || sectors.length === 0 || isWebFallback) return;
+    if (!isBookmarked || !user || !book || sectors.length === 0 || isWebBook) return;
 
     const handler = setTimeout(() => {
         const bookId = generateBookId(book as SearchResult);
@@ -183,15 +194,15 @@ function Reader() {
     }, 1500);
 
     return () => clearTimeout(handler);
-  }, [activeSector, book, user, isBookmarked, sectors.length, isWebFallback]);
+  }, [activeSector, book, user, isBookmarked, sectors.length, isWebBook]);
 
 
   const handleToggleBookmark = async () => {
-    if (!user || !book || isWebFallback) {
+    if (!user || !book || isWebBook) {
         toast({
             variant: "destructive",
             title: "Action Not Available",
-            description: "Cannot save web fallback links to your library.",
+            description: "Cannot save web results to your library.",
         });
         return;
     }
@@ -315,8 +326,8 @@ function Reader() {
             size="icon"
             aria-label="Bookmark"
             onClick={handleToggleBookmark}
-            disabled={isBookmarkLoading || !user || isWebFallback}
-            title={isWebFallback ? "Cannot bookmark web results" : "Bookmark this transmission"}
+            disabled={isBookmarkLoading || !user || isWebBook}
+            title={isWebBook ? "Cannot bookmark web results" : "Bookmark this transmission"}
           >
             {isBookmarkLoading ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
