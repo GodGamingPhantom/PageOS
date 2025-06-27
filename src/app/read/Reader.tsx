@@ -1,9 +1,19 @@
+
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ChevronLeft, ChevronRight, List, Bookmark, Settings, LoaderCircle, AlertTriangle } from 'lucide-react';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  List,
+  Bookmark,
+  Settings,
+  LoaderCircle,
+  AlertTriangle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TOCModal from './TOCModal';
 import { useAuth } from '@/context/auth-provider';
@@ -26,25 +36,28 @@ const Reader = () => {
     activeSector,
     setActiveSector,
     direction,
-    setDirection
+    setDirection,
   } = useBookLoader(searchParams);
 
   const {
     isBookmarked,
     isWebBook,
     isBookmarkLoading,
-    toggleBookmark
+    toggleBookmark,
   } = useBookmark(user, book, activeSector, sectors);
 
   const [showTOC, setShowTOC] = useState(false);
 
-  const paginate = useCallback((delta: number) => {
-    const newIndex = activeSector + delta;
-    if (newIndex >= 0 && newIndex < sectors.length) {
-      setDirection(delta);
-      setActiveSector(newIndex);
-    }
-  }, [activeSector, sectors.length, setDirection, setActiveSector]);
+  const paginate = useCallback(
+    (delta: number) => {
+      const newIndex = activeSector + delta;
+      if (newIndex >= 0 && newIndex < sectors.length) {
+        setDirection(delta);
+        setActiveSector(newIndex);
+      }
+    },
+    [activeSector, sectors.length, setDirection, setActiveSector]
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -55,31 +68,33 @@ const Reader = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [paginate]);
 
-  if (isLoading) return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] items-center justify-center gap-4">
-      <LoaderCircle className="h-6 w-6 animate-spin text-accent" />
-      <p>Rendering Transmission...</p>
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] items-center justify-center gap-4">
+        <LoaderCircle className="h-6 w-6 animate-spin text-accent" />
+        <p>Rendering Transmission...</p>
+      </div>
+    );
 
-  if (error) return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] items-center justify-center text-destructive">
-      <AlertTriangle className="h-8 w-8" />
-      <p className="font-headline">TRANSMISSION_ERROR</p>
-      <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] items-center justify-center text-destructive">
+        <AlertTriangle className="h-8 w-8" />
+        <p className="font-headline">TRANSMISSION_ERROR</p>
+        <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+      </div>
+    );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-x-hidden w-full max-w-full">
-      {/* HEADER */}
-      <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground h-[41px] shrink-0 w-full">
+    <div className="flex flex-col overflow-x-hidden h-[calc(100vh-3.5rem)] w-full max-w-full">
+      {/* Header */}
+      <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground h-[41px] shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <span className="truncate">
-            {isLoading ? 'LOADING...' : error ? 'ERROR' : `TRANSMISSION > ${book?.source.toUpperCase()} > ID_${book?.id.slice(-20)}`}
+            TRANSMISSION ▸ {book?.source.toUpperCase()} ▸ ID_{book?.id.slice(-20)}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -93,11 +108,13 @@ const Reader = () => {
             size="icon"
             onClick={toggleBookmark}
             disabled={isBookmarkLoading || !user || isWebBook}
-            title={isWebBook ? "Cannot bookmark web results" : "Bookmark this transmission"}
+            title={isWebBook ? 'Cannot bookmark web results' : 'Bookmark this transmission'}
           >
-            {isBookmarkLoading
-              ? <LoaderCircle className="h-4 w-4 animate-spin" />
-              : <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-accent text-accent' : ''}`} />}
+            {isBookmarkLoading ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-accent text-accent' : ''}`} />
+            )}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => router.push('/settings')} aria-label="Settings">
             <Settings className="h-4 w-4" />
@@ -105,9 +122,9 @@ const Reader = () => {
         </div>
       </header>
 
-      {/* MAIN */}
-      <main className="flex-1 relative overflow-y-auto overflow-x-hidden">
-        <div className="w-full h-full relative">
+      {/* Main Sector Area */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+        <div className="relative w-full h-full">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={activeSector}
@@ -117,26 +134,23 @@ const Reader = () => {
               exit={{ x: direction < 0 ? '100%' : '-100%', opacity: 0 }}
               transition={{
                 x: { type: 'spring', stiffness: 220, damping: 25 },
-                opacity: { duration: 0.2 }
+                opacity: { duration: 0.2 },
               }}
-              className="absolute inset-0"
+              className="absolute inset-0 w-full max-w-full"
             >
               {currentSector ? (
-                <div className="w-full max-w-full min-h-[calc(100vh-3.5rem)] px-4 sm:px-6 pt-12 pb-36 flex flex-col justify-between">
-                  {/* Top Content */}
+                <div className="sector w-full max-w-full min-h-[calc(100vh-3.5rem)] flex flex-col justify-between px-4 sm:px-6 pt-12 pb-36">
                   <div>
-                    <div className="font-headline text-xs text-accent/80 mb-4">
+                    <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                       ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
                     </div>
-                    <div className="space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                      {currentSector.map((p, i) => (
-                        <p key={i}>{p.trim()}</p>
+                    <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                      {currentSector.map((para, i) => (
+                        <p key={i}>{para.trim()}</p>
                       ))}
                     </div>
                   </div>
-
-                  {/* Bottom Footer */}
-                  <div className="pt-12 text-[10px] text-muted-foreground/50">
+                  <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
                     MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
                   </div>
                 </div>
@@ -150,7 +164,7 @@ const Reader = () => {
         </div>
       </main>
 
-      {/* Controls */}
+      {/* Fixed Bottom Controls */}
       {!isLoading && !error && (
         <div className="fixed bottom-4 left-0 right-0 z-50 pointer-events-none">
           <div className="flex justify-center pointer-events-auto">
@@ -164,7 +178,7 @@ const Reader = () => {
         </div>
       )}
 
-      {/* TOC Modal */}
+      {/* Table of Contents Modal */}
       {showTOC && (
         <TOCModal
           toc={toc}
