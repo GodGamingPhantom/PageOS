@@ -315,7 +315,7 @@ function Reader() {
             x: { type: "spring", stiffness: 300, damping: 30 },
             opacity: { duration: 0.2 },
           }}
-          className="w-full flex items-center justify-center py-8"
+          className="w-full min-w-[100%] flex items-center justify-center py-8"
         >
           <div className="w-full max-w-4xl mx-auto">
             <div className="sector-header font-headline text-xs text-accent/80 mb-4">
