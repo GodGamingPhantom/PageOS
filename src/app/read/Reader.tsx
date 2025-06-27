@@ -32,28 +32,20 @@ export default function Reader() {
     exit: (d: number) => ({ x: d < 0 ? '100%' : '-100%', opacity: 0 }),
   };
 
-  const renderSector = () => (
-    <motion.div
-      key={activeSector}
-      custom={direction}
-      variants={variants}
-      initial="enter"
-      animate="center"
-      exit="exit"
-      transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: .2 } }}
-      className="absolute inset-0"
-    >
-      <div className="text-xs font-headline text-accent/80 mb-4">
-        ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-      </div>
-      <div className="space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-        {current.map((p, i) => <p key={i}>{p.trim()}</p>)}
-      </div>
-      <div className="mt-6 text-[10px] text-muted-foreground/50">
-        MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-      </div>
-    </motion.div>
+  const sectorContent = (
+      <>
+        <div className="text-xs font-headline text-accent/80 mb-4">
+            ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+        </div>
+        <div className="space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+            {current.map((p, i) => <p key={i}>{p.trim()}</p>)}
+        </div>
+        <div className="mt-6 text-[10px] text-muted-foreground/50">
+            MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
+        </div>
+      </>
   );
+
 
   if (isLoading) return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] items-center justify-center gap-4">
@@ -105,21 +97,25 @@ export default function Reader() {
 
       {/* CONTENT */}
       <main className="flex-1 overflow-y-auto px-4 pt-12 pb-24">
-        <div className="relative max-w-3xl mx-auto h-full">
-          {/* This invisible div acts as a sizer to prevent vertical collapse */}
-          <div className="invisible">
-            <div className="text-xs font-headline text-accent/80 mb-4">
-              ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-            </div>
-            <div className="space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-              {current.map((p, i) => <p key={i}>{p.trim()}</p>)}
-            </div>
-            <div className="mt-6 text-[10px] text-muted-foreground/50">
-              MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-            </div>
-          </div>
+        <div className="relative max-w-3xl mx-auto h-full min-h-[65vh] isolate">
           <AnimatePresence initial={false} custom={direction}>
-            {renderSector()}
+            <motion.div
+              key={activeSector}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: 'spring', stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 },
+              }}
+              className="absolute inset-0"
+            >
+              <div className="min-h-[65vh] flex flex-col justify-start">
+                {sectorContent}
+              </div>
+            </motion.div>
           </AnimatePresence>
         </div>
       </main>
