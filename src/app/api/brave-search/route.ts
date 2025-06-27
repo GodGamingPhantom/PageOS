@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // CORRECTED: This selector is designed for Brave's search result structure.
+    // This is the robust selector you recommended, which grabs any link.
     const allFoundLinks = $('a[href^="http"]').map((i, el) => {
         return {
             title: $(el).text().trim(),
