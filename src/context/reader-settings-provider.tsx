@@ -19,8 +19,6 @@ const ReaderSettingsContext = createContext<ReaderSettings | undefined>(undefine
 
 const defaultSourceSettings: SourceSettings = {
   gutendex: true,
-  openLibrary: true,
-  standardEbooks: true,
 };
 
 export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
@@ -66,7 +64,9 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
       }
       const storedSources = localStorage.getItem('pageos-source-settings');
       if (storedSources) {
-        setSourceSettings(JSON.parse(storedSources));
+        // Merge with defaults to ensure new sources are included
+        const parsed = JSON.parse(storedSources);
+        setSourceSettings(prev => ({ ...prev, ...parsed }));
       } else {
         // If nothing is in localStorage, set the defaults
         localStorage.setItem('pageos-source-settings', JSON.stringify(defaultSourceSettings));
