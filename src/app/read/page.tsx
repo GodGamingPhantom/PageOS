@@ -7,12 +7,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { fetchWebBookContent } from '@/adapters/web';
 import { Button } from '@/components/ui/button';
-import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, List, X } from 'lucide-react';
+import { Bookmark, LoaderCircle, Settings, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { useAuth } from '@/context/auth-provider';
 import { addBookToLibrary, removeBookFromLibrary, getLibraryBook, updateBookProgress, generateBookId, LibraryBook } from '@/services/userData';
 import { useToast } from "@/hooks/use-toast";
 import TOCModal from './TOCModal';
 
+// Helper function to parse book data from URL parameters
 function parseBookFromParams(params: URLSearchParams): SearchResult | null {
     const bookData = Object.fromEntries(params.entries());
     if (!bookData.source || !bookData.id || !bookData.title) return null;
@@ -29,6 +30,7 @@ function parseBookFromParams(params: URLSearchParams): SearchResult | null {
     return book as SearchResult;
 }
 
+// A simple, stable component for the navigation controls
 const ReaderControls = ({ onPrev, onNext, isFirst, isLast }: { onPrev: () => void, onNext: () => void, isFirst: boolean, isLast: boolean }) => {
   return (
     <div className="flex justify-center items-center gap-4">
@@ -56,6 +58,7 @@ const ReaderControls = ({ onPrev, onNext, isFirst, isLast }: { onPrev: () => voi
   );
 };
 
+// A type guard for web books which are handled differently
 type WebBook = {
   source: 'web';
   id: string; // The URL
@@ -80,24 +83,24 @@ function Reader() {
   
   const [activeSector, setActiveSector] = useState(0);
   const [direction, setDirection] = useState(0);
-
   const [showTOC, setShowTOC] = useState(false);
 
   const isWebBook = book?.source === 'web';
   const isBookmarked = !!libraryBook && !isWebBook;
   
+  // A pure calculation to derive sectors and TOC from content
   const { sectors, toc } = useMemo(() => {
     if (!content) return { sectors: [], toc: [] };
 
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
-    const newSectors = [];
+    const newSectors: string[][] = [];
     const newTOC: { title: string; sectorIndex: number }[] = [];
-
-    const SECTOR_SIZE = 4;
+    const SECTOR_SIZE = 4; // Paragraphs per sector
 
     for (let i = 0; i < paragraphs.length; i += SECTOR_SIZE) {
       const sectorParas = paragraphs.slice(i, i + SECTOR_SIZE);
 
+      // Attempt to find a chapter-like heading in the current sector's paragraphs
       const heading = sectorParas.find(p =>
         /^chapter\s+\d+/i.test(p.trim()) ||
         /^CHAPTER\b/i.test(p.trim()) ||
@@ -107,7 +110,7 @@ function Reader() {
 
       if (heading) {
         newTOC.push({
-          title: heading.trim().split('\n')[0],
+          title: heading.trim().split('\n')[0], // Use the first line of the heading
           sectorIndex: newSectors.length,
         });
       }
@@ -119,7 +122,7 @@ function Reader() {
   }, [content]);
 
   const paginate = (newDirection: number) => {
-    let newIndex = activeSector + newDirection;
+    const newIndex = activeSector + newDirection;
     if (newIndex >= 0 && newIndex < sectors.length) {
       setDirection(newDirection);
       setActiveSector(newIndex);
@@ -160,15 +163,13 @@ function Reader() {
           }
         }
 
-        if (!currentBook) {
-          throw new Error("Book data is incomplete or invalid.");
-        }
+        if (!currentBook) throw new Error("Book data is incomplete or invalid.");
         setBook(currentBook);
         
         if (typeof loadedContent === 'string') {
           setContent(loadedContent);
         } else if (loadedContent) {
-           setError('Unsupported format. The reader can only display plain text or scraped HTML content.');
+           setError('Unsupported format. The reader can only display plain text content.');
            setContent(null);
         } else {
             throw new Error("Failed to load or parse book content.");
@@ -186,10 +187,10 @@ function Reader() {
     loadBookData();
   }, [searchParams]);
   
+  // Effect to load bookmark status and progress
   useEffect(() => {
     if (!user || !book || isWebBook) {
         setLibraryBook(null);
-        setIsBookmarkLoading(false);
         return;
     };
 
@@ -206,6 +207,7 @@ function Reader() {
 
   }, [user, book, sectors.length, isWebBook]);
 
+  // Effect to save progress
   useEffect(() => {
     if (!isBookmarked || !user || !book || sectors.length === 0 || isWebBook) return;
 
@@ -213,7 +215,7 @@ function Reader() {
         const bookId = generateBookId(book as SearchResult);
         const percentage = sectors.length > 0 ? ((activeSector + 1) / sectors.length) * 100 : 0;
         updateBookProgress(user.uid, bookId, {
-            progress: Math.min(100, percentage),
+            percentage: Math.min(100, percentage),
             lastReadSector: activeSector
         }).catch(e => console.error("Failed to save progress", e));
     }, 1500);
@@ -221,19 +223,13 @@ function Reader() {
     return () => clearTimeout(handler);
   }, [activeSector, book, user, isBookmarked, sectors.length, isWebBook]);
 
-
   const handleToggleBookmark = async () => {
     if (!user || !book || isWebBook) {
-        toast({
-            variant: "destructive",
-            title: "Action Not Available",
-            description: "Cannot save web results to your library.",
-        });
+        toast({ variant: "destructive", title: "Action Not Available", description: "Cannot save web results to your library." });
         return;
     }
 
     setIsBookmarkLoading(true);
-    
     try {
         if (isBookmarked) {
             const bookId = generateBookId(book);
@@ -241,92 +237,66 @@ function Reader() {
             setLibraryBook(null);
             toast({ title: "Bookmark Removed", description: `"${book.title}" removed from your archive.` });
         } else {
-            await addBookToLibrary(user.uid, book as SearchResult);
-            const bookId = generateBookId(book);
+            const bookToSave = book as SearchResult;
+            await addBookToLibrary(user.uid, bookToSave);
+            const bookId = generateBookId(bookToSave);
             const newLibraryBook = await getLibraryBook(user.uid, bookId);
             setLibraryBook(newLibraryBook);
             toast({ title: "Bookmark Added", description: `"${book.title}" saved to your archive.` });
         }
     } catch (error) {
         console.error("Failed to toggle bookmark:", error);
-        toast({
-            variant: "destructive",
-            title: "Sync Error",
-            description: "Could not update your archive. Please try again.",
-        });
+        toast({ variant: "destructive", title: "Sync Error", description: "Could not update your archive. Please try again." });
     } finally {
         setIsBookmarkLoading(false);
     }
   };
   
+  // Framer Motion variants for the animation
   const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
+    enter: (direction: number) => ({ x: direction > 0 ? '100%' : '-100%', opacity: 0 }),
+    center: { zIndex: 1, x: 0, opacity: 1 },
+    exit: (direction: number) => ({ zIndex: 0, x: direction < 0 ? '100%' : '-100%', opacity: 0 }),
   };
-
-  const header = (
-    <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground shrink-0">
-      <div className="flex items-center gap-2 min-w-0">
-        <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <span className="truncate">{isLoading ? 'LOADING...' : error ? 'ERROR' : `TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id.slice(-20) || '...'}`}</span>
-      </div>
-      {!isLoading && !error && (
-        <div className="flex items-center gap-2">
-          {toc.length > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Table of Contents"
-              onClick={() => setShowTOC(true)}
-              title="Table of Contents"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Bookmark"
-            onClick={handleToggleBookmark}
-            disabled={isBookmarkLoading || !user || isWebBook}
-            title={isWebBook ? "Cannot bookmark web results" : "Bookmark this transmission"}
-          >
-            {isBookmarkLoading ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
-            ) : (
-              <Bookmark className={`h-4 w-4 transition-colors ${isBookmarked ? 'fill-accent text-accent' : ''}`} />
-            )}
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => router.push('/settings')}><Settings className="h-4 w-4" /></Button>
-        </div>
-      )}
-    </header>
-  );
 
   const currentSector = sectors[activeSector];
 
+  // The main layout skeleton
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-x-hidden">
-      
-      {header}
+      {/* Header */}
+      <header className="flex items-center justify-between p-2 border-b border-border/50 text-xs text-muted-foreground shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} aria-label="Go back">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <span className="truncate">{isLoading ? 'LOADING...' : error ? 'ERROR' : `TRANSMISSION > ${book?.source.toUpperCase() || '...'} > ID_${book?.id.slice(-20) || '...'}`}</span>
+        </div>
+        {!isLoading && !error && book && (
+          <div className="flex items-center gap-2">
+            {toc.length > 0 && (
+              <Button variant="ghost" size="icon" aria-label="Table of Contents" onClick={() => setShowTOC(true)} title="Table of Contents">
+                <List className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Bookmark"
+              onClick={handleToggleBookmark}
+              disabled={isBookmarkLoading || !user || isWebBook}
+              title={isWebBook ? "Cannot bookmark web results" : "Bookmark this transmission"}
+            >
+              {isBookmarkLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Bookmark className={`h-4 w-4 transition-colors ${isBookmarked ? 'fill-accent text-accent' : ''}`} />}
+            </Button>
+            <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => router.push('/settings')}><Settings className="h-4 w-4" /></Button>
+          </div>
+        )}
+      </header>
 
+      {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl px-4 py-12 min-h-full">
-          
           {isLoading ? (
              <div className="flex flex-col items-center gap-4 pt-16">
                 <LoaderCircle className="h-8 w-8 animate-spin text-accent" />
@@ -348,10 +318,7 @@ function Reader() {
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 },
-                  }}
+                  transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
                   className="w-full"
                 >
                   <div className="sector-header font-headline text-xs text-accent/80 mb-4">
@@ -375,23 +342,24 @@ function Reader() {
               )}
             </AnimatePresence>
           )}
-
         </div>
       </main>
 
-      {!isLoading && !error && (
+      {/* Navigation Controls - Fixed positioning */}
+      {!isLoading && !error && sectors.length > 0 && (
         <div className="fixed bottom-4 left-0 right-0 z-50 pointer-events-none">
             <div className="flex w-full justify-center pointer-events-auto">
                 <ReaderControls
                 onPrev={goToPrevSector}
                 onNext={goToNextSector}
                 isFirst={activeSector === 0}
-                isLast={!sectors.length || activeSector === sectors.length - 1}
+                isLast={activeSector === sectors.length - 1}
                 />
             </div>
         </div>
       )}
 
+      {/* TOC Modal - Fixed positioning */}
       {showTOC && (
         <TOCModal
           toc={toc}
@@ -407,7 +375,7 @@ function Reader() {
   );
 }
 
-
+// Suspense wrapper for the main Reader component
 export default function ReaderPage() {
   return (
     <Suspense fallback={
@@ -420,3 +388,5 @@ export default function ReaderPage() {
     </Suspense>
   );
 }
+
+    
