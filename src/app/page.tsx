@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,6 @@ import type { WebFallbackResult } from "@/adapters/webFallback";
 import { SearchResultCard } from "@/components/search-result-card";
 import { LoaderCircle, SignalZero } from "lucide-react";
 import { fetchGutenbergBooks } from "@/adapters/gutendex";
-import { fetchOpenLibrary } from "@/adapters/openLibrary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FallbackLinks } from "@/components/fallback-links";
 
@@ -31,17 +31,9 @@ export default function HomePage() {
     async function loadFeaturedBooks() {
       setIsFeaturedLoading(true);
       try {
-        const [gutenbergBooks, openLibraryBooks] = await Promise.all([
-          fetchGutenbergBooks(),
-          fetchOpenLibrary('classic literature'),
-        ]);
-
-        const allBooks = [
-          ...gutenbergBooks.slice(0, 10),
-          ...openLibraryBooks.slice(0, 10),
-        ];
-
-        setFeaturedBooks(shuffleArray(allBooks));
+        const gutenbergBooks = await fetchGutenbergBooks();
+        // Take the top 20 books and shuffle them for variety
+        setFeaturedBooks(shuffleArray(gutenbergBooks.slice(0, 20)));
       } catch (error) {
         console.error("Failed to load featured books:", error);
         setFeaturedBooks([]);
