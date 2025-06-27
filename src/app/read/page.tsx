@@ -351,8 +351,8 @@ function Reader() {
     <div className="flex h-[calc(100vh-3.5rem)] animate-fade-in flex-col overflow-x-hidden">
       {header}
   
-      <main className="flex-1 overflow-y-auto px-4 pt-8 pb-28">
-        <div className="relative w-full max-w-3xl mx-auto">
+      <main className="flex-1 overflow-y-auto px-4 pt-8 pb-28 flex justify-center">
+        <div className="relative w-full max-w-3xl">
           <div className="relative">
             {!currentSector ? (
               <div className="flex-1 grid place-items-center">
@@ -373,7 +373,7 @@ function Reader() {
                   }}
                   className="w-full"
                 >
-                  <div className="sector">
+                  <div className="sector w-full">
                     <div className="sector-header font-headline text-xs text-accent/80 mb-4">
                       ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
                     </div>
