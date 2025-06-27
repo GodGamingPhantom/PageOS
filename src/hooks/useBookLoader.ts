@@ -1,60 +1,82 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
 import { fetchWebBookContent } from '@/adapters/web';
-import { URLSearchParams } from 'url';
 
 export default function useBookLoader(searchParams: URLSearchParams) {
-  const [book, setBook] = useState<SearchResult | {source:'web',id:string,title:string,authors:string} | null>(null);
-  const [content, setContent] = useState('');
-  const [isLoading, setLoading] = useState(true);
+  const [book, setBook] = useState<any>(null);
+  const [content, setContent] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeSector, setActiveSector] = useState(0);
+  const [direction, setDirection] = useState(0);
 
   useEffect(() => {
-    (async () => {
-      setLoading(true); setError(null);
-      const src = searchParams.get('source');
+    async function load() {
+      setIsLoading(true);
       try {
-        if (src === 'web') {
-          const url = searchParams.get('url')!;
-          const title = searchParams.get('title')!;
-          setBook({ source:'web', id:url, title, authors:'Web Source' });
-          const webContent = await fetchWebBookContent(url);
-          setContent(webContent || '');
+        const source = searchParams.get('source');
+        let loadedContent: string | Blob | null = null;
+        let parsedBook: SearchResult | { source: 'web'; id: string | null; title: string | null; authors: string; } | null = null;
+
+        if (source === 'web') {
+          const url = searchParams.get('url');
+          const title = search_params.get('title');
+          parsedBook = { source: 'web', id: url, title, authors: 'Web' };
+          if (url) {
+            loadedContent = await fetchWebBookContent(url);
+          }
         } else {
           const bookData = Object.fromEntries(searchParams.entries());
-          const parsedBook: SearchResult = {
-            id: bookData.id!, source: bookData.source! as any, title: bookData.title!, authors: bookData.authors!, formats: JSON.parse(bookData.formats!),
+          parsedBook = {
+            id: bookData.id!,
+            title: bookData.title!,
+            source: bookData.source as any,
+            authors: bookData.authors || '',
+            formats: JSON.parse(bookData.formats || '{}'),
           };
-          setBook(parsedBook);
-          const bookContent = await fetchBookContent(parsedBook);
-          setContent(typeof bookContent === 'string' ? bookContent : '');
+          loadedContent = await fetchBookContent(parsedBook);
         }
-      } catch(e:any) {
-        setError(e.message || 'Load failed');
-      } finally { setLoading(false); }
-    })();
+
+        setBook(parsedBook);
+        setContent(typeof loadedContent === 'string' ? loadedContent : '');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to load');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    load();
   }, [searchParams]);
 
   const { sectors, toc } = useMemo(() => {
     if (!content) return { sectors: [], toc: [] };
-    const paras = content.split(/\n\s*\n/).filter(p => p.trim());
-    const secs: string[][] = [];
-    const tocItems: {title:string, sectorIndex:number}[] = [];
-    const SECTOR_SIZE = 4;
-    for (let i = 0; i < paras.length; i += SECTOR_SIZE) {
-        const block = paras.slice(i, i + SECTOR_SIZE);
-        const heading = block.find(b =>
-          /^chapter\s+\d+/i.test(b.trim()) ||
-          /^CHAPTER\b/i.test(b.trim()) ||
-          /^[IVXLCDM]+\.\s/i.test(b.trim()) ||
-          /^PART\s+[A-Z]+/i.test(b.trim())
-        );
-        if (heading) tocItems.push({ title: heading.trim().split('\n')[0], sectorIndex: secs.length });
-        secs.push(block);
+    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
+    const sectors: string[][] = [];
+    const toc: { title: string; sectorIndex: number }[] = [];
+
+    for (let i = 0; i < paragraphs.length; i += 4) {
+      const sector = paragraphs.slice(i, i + 4);
+      const heading = sector.find(p => /^chapter\s+\d+/i.test(p) || /^PART/i.test(p) || /^[IVXLCDM]+\.\s/i.test(p.trim()));
+      if (heading) toc.push({ title: heading.trim().split('\n')[0], sectorIndex: sectors.length });
+      sectors.push(sector);
     }
-    return { sectors: secs, toc: tocItems };
+
+    return { sectors, toc };
   }, [content]);
 
-  return { book, sectors, toc, isWebBook: book?.source === 'web', isLoading, error };
+  return {
+    book,
+    content,
+    isLoading,
+    error,
+    activeSector,
+    setActiveSector,
+    direction,
+    setDirection,
+    currentSector: sectors[activeSector],
+    sectors,
+    toc
+  };
 }
