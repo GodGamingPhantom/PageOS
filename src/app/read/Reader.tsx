@@ -56,7 +56,6 @@ const Reader = () => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -117,31 +116,8 @@ const Reader = () => {
   return (
     <div className="flex flex-col overflow-x-hidden h-[calc(100vh-3.5rem)]">
       {header}
-      <main className="flex-1 overflow-y-auto relative px-4 pt-12 pb-48">
-        <div className="max-w-3xl mx-auto w-full min-h-[calc(100vh-12rem)] relative">
-          <div className="invisible">
-              {currentSector ? (
-                <div className="sector relative">
-                  <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                    ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-                  </div>
-                  <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                    {currentSector.map((p, i) => (
-                      <p key={i}>{p.trim()}</p>
-                    ))}
-                  </div>
-                  <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
-                    MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
-                  </div>
-                  {/* breathing space below MEM.STREAM */}
-                  <div className="h-24" />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No content to display.
-                </div>
-              )}
-          </div>
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+        <div className="w-full h-full relative">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={activeSector}
@@ -150,26 +126,27 @@ const Reader = () => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: direction < 0 ? '100%' : '-100%', opacity: 0 }}
               transition={{
-                x: { type: 'spring', stiffness: 220, damping: 30 },
+                x: { type: 'spring', stiffness: 220, damping: 25 },
                 opacity: { duration: 0.2 }
               }}
               className="absolute inset-0"
             >
               {currentSector ? (
-                <div className="sector relative">
-                  <div className="sector-header font-headline text-xs text-accent/80 mb-4">
-                    ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                <div className="sector w-full min-h-[calc(100vh-3.5rem)] flex flex-col justify-between p-4 sm:p-8 pt-12 pb-24">
+                  <div>
+                    <div className="sector-header font-headline text-xs text-accent/80 mb-4">
+                      ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                    </div>
+                    <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
+                        {currentSector.map((p, i) => (
+                            <p key={i}>{p.trim()}</p>
+                        ))}
+                    </div>
                   </div>
-                  <div className="sector-body space-y-4 font-reader text-base leading-relaxed text-foreground/90">
-                    {currentSector.map((p, i) => (
-                      <p key={i}>{p.trim()}</p>
-                    ))}
-                  </div>
+                  
                   <div className="sector-footer text-[10px] text-muted-foreground/50 mt-6">
                     MEM.STREAM ▍ DECODING {((activeSector + 1) / sectors.length * 100).toFixed(1)}%
                   </div>
-                  {/* breathing space below MEM.STREAM */}
-                  <div className="h-24" />
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
