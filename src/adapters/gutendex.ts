@@ -61,13 +61,10 @@ export async function fetchGutenbergBookContent(formats: Record<string, string>)
     return await res.text();
   }
 
+  // If we find an EPUB, throw a specific error because the reader doesn't support it.
   const epubUrl = formats['application/epub+zip'];
   if (epubUrl) {
-    const res = await fetch(`/api/proxy?url=${encodeURIComponent(epubUrl)}`);
-    if (!res.ok) {
-      throw new Error(`Failed to fetch book content from ${epubUrl}`);
-    }
-    return await res.blob();
+    throw new Error('EPUB format is not supported by the PageOS reader at this time.');
   }
 
   throw new Error('No compatible book format found for this Gutendex book (epub or txt).');

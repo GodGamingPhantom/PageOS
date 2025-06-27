@@ -1,3 +1,4 @@
+
 // src/app/api/fallback-search/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -17,7 +18,8 @@ export async function GET(request: NextRequest) {
   }
 
   // --- START OF MOCK IMPLEMENTATION ---
-  // This now returns an empty array to prevent incorrect results from showing.
+  // This now returns an empty array to prevent incorrect results from showing up
+  // and interfering with the primary source adapters.
   const mockResults: any[] = [];
   
   // To test the fallback UI, you could temporarily enable a mock result

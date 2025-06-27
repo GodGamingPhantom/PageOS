@@ -63,13 +63,17 @@ export async function fetchOpenLibraryContent(editionKey: string): Promise<strin
   }
 
   const html = await htmlRes.text();
-  const parser = new DOMParser();
+  // We need a browser environment to parse HTML, so this must run on the client.
+  if (typeof window === 'undefined') return null;
+  
+  const parser = new window.DOMParser();
   const doc = parser.parseFromString(html, "text/html");
   
-  // This class is commonly used for the main text container on Open Library's reader.
-  const contentContainer = doc.querySelector(".book-page-text");
+  // CORRECTED: The actual content is inside a div with the class 'content-body'.
+  const contentContainer = doc.querySelector(".content-body");
   
   if (contentContainer) {
+    // We get the textContent to strip all HTML tags and get pure text.
     return contentContainer.textContent || null;
   }
   
