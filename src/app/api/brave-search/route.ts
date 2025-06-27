@@ -4,6 +4,7 @@ import * as cheerio from 'cheerio';
 
 function makeBraveSearchURL(query: string) {
   // This query is crafted to find free, full-text ebooks in PDF or TXT format.
+  // Using a more direct query format to improve result accuracy.
   const finalQuery = `${query} ebook free filetype:pdf OR filetype:txt`;
   return `https://search.brave.com/search?q=${encodeURIComponent(finalQuery)}&source=web`;
 }
@@ -18,7 +19,8 @@ export async function GET(req: NextRequest) {
     const braveURL = makeBraveSearchURL(query);
     const res = await fetch(braveURL, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 PageOS/1.0.0',
+        // Using a standard browser User-Agent to avoid being blocked.
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept-Language': 'en-US,en;q=0.9',
       },
        signal: AbortSignal.timeout(10000) // 10-second timeout
@@ -31,21 +33,23 @@ export async function GET(req: NextRequest) {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // Use a more specific and robust selector to find the result links
+    // This is a more robust selector for Brave/Bing search results.
     const results = $('li.b_algo h2 a').map((i, el) => {
         const href = $(el).attr('href');
         const title = $(el).text();
-        if (href && (href.includes('.pdf') || href.includes('.txt'))) {
+        // Ensure we only grab valid PDF or TXT links.
+        if (href && (href.toLowerCase().endsWith('.pdf') || href.toLowerCase().endsWith('.txt'))) {
             return {
                 title,
                 link: href,
-                type: href.endsWith('.pdf') ? 'pdf' : 'txt',
+                type: href.toLowerCase().endsWith('.pdf') ? 'pdf' : 'txt',
             };
         }
         return null;
     }).get();
 
-    return NextResponse.json(results.slice(0, 5)); // Return top 5 results
+    // Return the first 5 valid results.
+    return NextResponse.json(results.slice(0, 5));
 
   } catch(error) {
     console.error("Error during Brave search scraping:", error);
