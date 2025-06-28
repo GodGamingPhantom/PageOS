@@ -11,20 +11,9 @@ function createBookQuery(book: SearchResult): string {
   params.set("title", book.title);
   params.set("authors", book.authors);
 
-  switch (book.source) {
-    case "gutendex":
-      params.set("formats", JSON.stringify(book.formats));
-      break;
-    case "openLibrary":
-      params.set("edition", book.edition);
-      if (book.cover) {
-        params.set("cover", book.cover);
-      }
-      break;
-    case "standardEbooks":
-      params.set("slug", book.slug);
-      break;
-  }
+  // Only Gutendex is supported, so we only need to handle its formats.
+  params.set("formats", JSON.stringify(book.formats));
+  
   return params.toString();
 }
 

@@ -1,35 +1,19 @@
 
-
 import * as gutendex from './gutendex';
 import type { MappedGutenbergBook } from './gutendex';
 
 export type SearchResult = MappedGutenbergBook;
 
 /**
- * This file acts as a central hub for fetching book content from various sources.
- * Currently, it only supports Gutendex, but it's designed to be easily extendable.
- * For example, if you were to add another internal source like 'Standard Ebooks',
- * you would add a case for it in the fetchBookContent function.
+ * This file acts as a central hub for fetching book content from Gutendex.
  */
-
 
 /**
  * Fetches content from a primary source (currently only Gutendex).
- * This function determines which adapter to use based on the book's `source` property.
  * @param book The book object from a search result.
  * @returns A promise that resolves to the string content of the book.
  */
 export async function fetchBookContent(book: SearchResult): Promise<string | Blob> {
-  // A switch statement would be used here if we had multiple primary sources.
-  // switch (book.source) {
-  //   case 'gutendex':
-  //     return await gutendex.fetchGutenbergBookContent(book.formats);
-  //   case 'anotherSource':
-  //     // return await anotherSource.fetchContent(book.details);
-  //   default:
-  //     throw new Error(`Unknown book source: ${book.source}`);
-  // }
-  
-  // Since we only have Gutendex as a primary source, we call its adapter directly.
+  // Only Gutendex is a primary source, so we call its adapter directly.
   return await gutendex.fetchGutenbergBookContent(book.formats);
 }
