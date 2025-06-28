@@ -1,10 +1,17 @@
 'use client';
-import { useEffect, useState, useMemo } from 'react';
-import { fetchBookContent, SearchResult } from '@/adapters/sourceManager';
+
+import { useEffect, useMemo, useState } from 'react';
+import type { SearchResult } from '@/adapters/sourceManager';
+import { fetchBookContent } from '@/adapters/sourceManager';
 import { fetchWebBookContent } from '@/adapters/web';
+import { getLibraryBook } from '@/services/userData';
+import { useAuth } from '@/context/auth-provider';
+import { generateBookId } from '@/services/userData';
+
 
 export default function useBookLoader(searchParams: URLSearchParams) {
-  const [book, setBook] = useState<any>(null);
+  const { user } = useAuth();
+  const [book, setBook] = useState<SearchResult | null>(null);
   const [content, setContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,55 +19,98 @@ export default function useBookLoader(searchParams: URLSearchParams) {
   const [direction, setDirection] = useState(0);
 
   useEffect(() => {
-    async function load() {
+    const loadBookData = async () => {
       setIsLoading(true);
+      setError(null);
+
+      const source = searchParams.get('source');
+      const id = searchParams.get('id');
+      const title = searchParams.get('title');
+
+      if (!source || !id || !title) {
+        setError('Essential book information is missing from the request.');
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const source = searchParams.get('source');
         let loadedContent: string | Blob | null = null;
-        let parsedBook: SearchResult | { source: 'web'; id: string | null; title: string | null; authors: string; } | null = null;
+        let parsedBook: SearchResult;
 
         if (source === 'web') {
-          const url = searchParams.get('url');
-          const title = search_params.get('title');
-          parsedBook = { source: 'web', id: url, title, authors: 'Web' };
-          if (url) {
-            loadedContent = await fetchWebBookContent(url);
+          const url = searchParams.get('url')!;
+          parsedBook = {
+            id: url,
+            title: searchParams.get('title')!,
+            source: 'web' as 'gutendex',
+            authors: 'Web Source',
+            formats: {},
+          };
+          loadedContent = await fetchWebBookContent(url);
+          if (!loadedContent) {
+            throw new Error("Could not extract readable text from the web page.");
           }
         } else {
-          const bookData = Object.fromEntries(searchParams.entries());
           parsedBook = {
-            id: bookData.id!,
-            title: bookData.title!,
-            source: bookData.source as any,
-            authors: bookData.authors || '',
-            formats: JSON.parse(bookData.formats || '{}'),
+            id: id,
+            title: title,
+            source: source as 'gutendex',
+            authors: searchParams.get('authors') || 'Unknown',
+            formats: JSON.parse(searchParams.get('formats') || '{}'),
           };
           loadedContent = await fetchBookContent(parsedBook);
         }
 
         setBook(parsedBook);
-        setContent(typeof loadedContent === 'string' ? loadedContent : '');
+        setContent(typeof loadedContent === 'string' ? loadedContent : null);
+
+        if (user && parsedBook) {
+          const bookId = generateBookId(parsedBook);
+          const libraryBook = await getLibraryBook(user.uid, bookId);
+          if (libraryBook && typeof libraryBook.lastReadSector === 'number') {
+             setActiveSector(libraryBook.lastReadSector);
+          }
+        }
+
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load');
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred while loading the book.';
+        setError(errorMessage);
+        console.error("Book loading error:", e);
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
-    load();
-  }, [searchParams]);
-
+    loadBookData();
+  }, [searchParams, user]);
+  
   const { sectors, toc } = useMemo(() => {
     if (!content) return { sectors: [], toc: [] };
+
     const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim() !== '');
     const sectors: string[][] = [];
     const toc: { title: string; sectorIndex: number }[] = [];
+    const SECTOR_SIZE = 4;
 
-    for (let i = 0; i < paragraphs.length; i += 4) {
-      const sector = paragraphs.slice(i, i + 4);
-      const heading = sector.find(p => /^chapter\s+\d+/i.test(p) || /^PART/i.test(p) || /^[IVXLCDM]+\.\s/i.test(p.trim()));
-      if (heading) toc.push({ title: heading.trim().split('\n')[0], sectorIndex: sectors.length });
-      sectors.push(sector);
+    const chapterRegex = /^(chapter|part)\s+[\divxclmk]+\.?/i;
+    const allCapsTitle = /^[A-Z][A-Z\s]{5,}[A-Z]$/;
+
+    for (let i = 0; i < paragraphs.length; i += SECTOR_SIZE) {
+      const sectorContent = paragraphs.slice(i, i + SECTOR_SIZE);
+      const sectorIndex = sectors.length;
+      const heading = sectorContent.find(p => chapterRegex.test(p.trim()) || allCapsTitle.test(p.trim()));
+      
+      if (heading) {
+        toc.push({ title: heading.trim(), sectorIndex: sectorIndex });
+      }
+
+      sectors.push(sectorContent);
+    }
+    
+    if(toc.length === 0 && sectors.length > 10) {
+        for(let i = 0; i < sectors.length; i += 10) {
+            toc.push({title: `Sector ${i+1}`, sectorIndex: i});
+        }
     }
 
     return { sectors, toc };
@@ -68,15 +118,14 @@ export default function useBookLoader(searchParams: URLSearchParams) {
 
   return {
     book,
-    content,
     isLoading,
     error,
+    toc,
+    sectors,
+    currentSector: sectors[activeSector],
     activeSector,
     setActiveSector,
     direction,
     setDirection,
-    currentSector: sectors[activeSector],
-    sectors,
-    toc
   };
 }

@@ -1,75 +1,92 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { addBookToLibrary, getLibraryBook, removeBookFromLibrary, updateBookProgress, generateBookId } from '@/services/userData';
-import { useToast } from './use-toast';
 
-export default function useBookmark(user: any, book: any, activeSector: number, sectors: string[][]) {
-  const { toast } = useToast();
+import { useEffect, useState, useCallback } from 'react';
+import { User } from 'firebase/auth';
+import type { SearchResult } from '@/adapters/sourceManager';
+import {
+  addBookToLibrary,
+  getLibraryBook,
+  removeBookFromLibrary,
+  updateBookProgress,
+  generateBookId
+} from '@/services/userData';
+import { useToast } from '@/hooks/use-toast';
+
+export default function useBookmark(
+  user: User | null,
+  book: SearchResult | null,
+  activeSector: number,
+  sectors: string[][]
+) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
+  const { toast } = useToast();
+  
   const isWebBook = book?.source === 'web';
+  const bookId = book ? generateBookId(book) : null;
 
   useEffect(() => {
-    if (!user || !book || isWebBook) {
-      setIsBookmarked(false);
-      return;
+    if (!user || !bookId || isWebBook) {
+        setIsBookmarked(false);
+        return;
     };
-    setIsBookmarkLoading(true);
-    const bookId = generateBookId(book);
-    getLibraryBook(user.uid, bookId).then(lb => {
-      setIsBookmarked(!!lb);
-      if (lb?.lastReadSector && lb.lastReadSector < sectors.length) {
-        // We don't automatically jump to the bookmarked sector here
-        // to avoid disorienting the user. Progress is saved in the background.
-      }
-    }).finally(() => setIsBookmarkLoading(false));
-  }, [user, book, isWebBook, sectors.length]);
 
+    setIsBookmarkLoading(true);
+    getLibraryBook(user.uid, bookId)
+      .then(libraryBook => {
+        setIsBookmarked(!!libraryBook);
+      })
+      .catch(console.error)
+      .finally(() => setIsBookmarkLoading(false));
+
+  }, [user, bookId, isWebBook]);
+  
   useEffect(() => {
-    if (!isBookmarked || isWebBook || !book || !user || sectors.length === 0) return;
-    const timeout = setTimeout(() => {
-      const bookId = generateBookId(book);
-      updateBookProgress(user.uid, bookId, {
+    if (!user || !bookId || !isBookmarked || sectors.length === 0) return;
+
+    const handler = setTimeout(() => {
+      const progress = {
+        percentage: ((activeSector + 1) / sectors.length) * 100,
         lastReadSector: activeSector,
-        progress: sectors.length > 0 ? ((activeSector + 1) / sectors.length) * 100 : 0
-      });
+      };
+      updateBookProgress(user.uid, bookId, progress).catch(console.error);
     }, 1500);
-    return () => clearTimeout(timeout);
-  }, [activeSector, book, isBookmarked, isWebBook, sectors, user]);
 
-  const toggleBookmark = async () => {
-    if (!user || !book || isWebBook) {
-      if (isWebBook) {
-        toast({
-          variant: "destructive",
-          title: "Cannot Bookmark Web Content",
-          description: "Saving pages from the web is not currently supported.",
-        });
-      }
+    return () => clearTimeout(handler);
+  }, [activeSector, sectors.length, user, bookId, isBookmarked]);
+
+  const toggleBookmark = useCallback(async () => {
+    if (!user || !book || !bookId || isWebBook) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save books to your library.",
+        variant: 'destructive',
+      });
       return;
-    };
+    }
+    
     setIsBookmarkLoading(true);
-    const bookId = generateBookId(book);
     try {
       if (isBookmarked) {
         await removeBookFromLibrary(user.uid, bookId);
         setIsBookmarked(false);
-        toast({ title: "Bookmark Removed" });
+        toast({ title: 'Removed from Archive' });
       } else {
         await addBookToLibrary(user.uid, book);
         setIsBookmarked(true);
-        toast({ title: "Bookmarked!", description: "Your progress will now be saved." });
+        toast({ title: 'Saved to Archive' });
       }
     } catch (error) {
-       toast({
-          variant: "destructive",
-          title: "Sync Error",
-          description: "Could not save bookmark. Please try again.",
-        });
+      console.error('Failed to toggle bookmark', error);
+      toast({
+        title: 'Error',
+        description: 'Could not update your library. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsBookmarkLoading(false);
     }
-  };
+  }, [isBookmarked, user, book, bookId, isWebBook, toast]);
 
-  return { isBookmarked, isWebBook, isBookmarkLoading, toggleBookmark };
+  return { isBookmarked, isBookmarkLoading, isWebBook, toggleBookmark };
 }

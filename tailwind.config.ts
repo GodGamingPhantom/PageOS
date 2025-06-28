@@ -70,6 +70,10 @@ export default {
       },
       boxShadow: {
         glow: '0 0 15px hsl(var(--accent) / 0.5)',
+        'accent-glow': '0 0 12px -2px rgba(0, 255, 200, 0.7)',
+      },
+      backgroundImage: {
+        'scanner': 'linear-gradient(transparent 45%, rgba(0,255,200,0.04) 50%, transparent 55%)',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -96,11 +100,16 @@ export default {
         "cursor-blink": {
           "50%": { opacity: "0" },
         },
+        scan: {
+          '0%': { backgroundPosition: '0 -100vh' },
+          '100%': { backgroundPosition: '0 100vh' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         "cursor-blink": "cursor-blink 1.2s step-end infinite",
+        scanner: 'scan 5s linear infinite',
       },
     },
   },
