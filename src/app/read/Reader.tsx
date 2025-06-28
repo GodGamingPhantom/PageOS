@@ -126,19 +126,21 @@ export default function Reader() {
               }}
               className="absolute inset-0"
             >
-              <div className="h-full w-full max-w-full px-4 sm:px-8 flex flex-col justify-between pt-12 pb-24 bg-card/80 backdrop-blur-sm rounded-lg shadow-accent-glow ring-1 ring-accent/20 overflow-y-auto">
-                <div>
-                  <div className="font-headline text-xs text-accent/80 mb-4">
-                    ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+              <div className="h-full w-full max-w-full flex flex-col pt-12 pb-24 bg-card/80 backdrop-blur-sm rounded-lg shadow-accent-glow ring-1 ring-accent/20 overflow-y-auto">
+                <div className="w-full max-w-5xl mx-auto px-4 sm:px-8 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="font-headline text-xs text-accent/80 mb-4">
+                      ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                    </div>
+                    <div className="space-y-4 font-reader text-base text-foreground leading-relaxed">
+                      {currentSector?.map((p, i) => (
+                        <p key={i}>{p.trim()}</p>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-4 font-reader text-base text-foreground leading-relaxed">
-                    {currentSector?.map((p, i) => (
-                      <p key={i}>{p.trim()}</p>
-                    ))}
+                  <div className="mt-8 text-[10px] text-muted-foreground/50">
+                    MEM.STREAM ▍ DECODING {(100 * (activeSector + 1) / (sectors.length || 1)).toFixed(1)}%
                   </div>
-                </div>
-                <div className="mt-8 text-[10px] text-muted-foreground/50">
-                  MEM.STREAM ▍ DECODING {(100 * (activeSector + 1) / (sectors.length || 1)).toFixed(1)}%
                 </div>
               </div>
             </motion.div>
