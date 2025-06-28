@@ -126,7 +126,7 @@ export default function Reader() {
               }}
               className="absolute inset-0 w-full h-full overflow-y-auto"
             >
-              <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 pt-12 pb-24 bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
+              <div className="min-h-full w-full flex flex-col justify-between p-4 sm:p-6 pt-12 pb-24 bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
 
                 <div className="w-full flex-1 flex flex-col justify-between">
                   <div>
