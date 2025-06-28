@@ -9,6 +9,7 @@ import { LoaderCircle, SignalZero } from "lucide-react";
 import { fetchGutenbergBooks } from "@/adapters/gutendex";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WebFallbackResults, type WebFallbackResult } from "@/components/web-fallback-results";
+import { LegalSidebar } from "@/components/legal-sidebar";
 
 const shuffleArray = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -133,7 +134,7 @@ export default function HomePage() {
             <h2 className="font-headline text-lg text-accent/80 mb-4 border-b border-dashed border-border pb-2">
               // PRIMARY_ARCHIVE_RESULTS
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {renderPrimaryResults()}
             </div>
           </section>
@@ -170,18 +171,23 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 p-4 md:p-8">
-      <div>
-        <h1 className="text-3xl font-headline text-accent">SYSTEM_FEED</h1>
-        <p className="text-muted-foreground">
-          Search for transmissions and memory logs across the network.
-        </p>
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 p-4 md:p-8">
+      <div className="flex flex-col gap-8">
+        <div>
+          <h1 className="text-3xl font-headline text-accent">SYSTEM_FEED</h1>
+          <p className="text-muted-foreground">
+            Search for transmissions and memory logs across the network.
+          </p>
+        </div>
+
+        <CommandSearch onSearch={handleSearch} />
+
+        <div className="grid grid-cols-1 gap-8">
+          {renderContent()}
+        </div>
       </div>
-
-      <CommandSearch onSearch={handleSearch} />
-
-      <div className="grid grid-cols-1 gap-8">
-        {renderContent()}
+      <div className="hidden lg:block">
+        <LegalSidebar />
       </div>
     </div>
   );
