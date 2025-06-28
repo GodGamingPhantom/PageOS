@@ -11,8 +11,11 @@ function createBookQuery(book: SearchResult): string {
   params.set("title", book.title);
   params.set("authors", book.authors);
 
-  // Only Gutendex is supported, so we only need to handle its formats.
-  params.set("formats", JSON.stringify(book.formats));
+  if (book.source === 'gutendex') {
+    params.set("formats", JSON.stringify(book.formats));
+  } else if (book.source === 'web') {
+    params.set("url", book.url);
+  }
   
   return params.toString();
 }

@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { SearchResult } from '@/adapters/sourceManager';
+import type { SearchResult, MappedGutenbergBook } from '@/adapters/sourceManager';
 import { fetchBookContent } from '@/adapters/sourceManager';
 import { fetchWebBookContent } from '@/adapters/web';
 import { getLibraryBook } from '@/services/userData';
@@ -27,9 +27,10 @@ export default function useBookLoader(searchParams: URLSearchParams) {
       const source = searchParams.get('source');
       const id = searchParams.get('id');
       const title = searchParams.get('title');
+      const url = searchParams.get('url');
 
-      if (!source || !id || !title) {
-        setError('Essential book information is missing from the request.');
+      if (!source || !title) {
+        setError('Essential book information (source, title) is missing from the request.');
         setIsLoading(false);
         return;
       }
@@ -38,28 +39,33 @@ export default function useBookLoader(searchParams: URLSearchParams) {
         let loadedContent: string | Blob | null = null;
         let parsedBook: SearchResult;
 
-        if (source === 'web') {
-          const url = searchParams.get('url')!;
+        if (source === 'web' && url) {
           parsedBook = {
             id: url,
-            title: searchParams.get('title')!,
-            source: 'web' as 'gutendex',
-            authors: 'Web Source',
+            title: title,
+            source: 'web',
+            authors: searchParams.get('authors') || 'Web Source',
+            url: url,
             formats: {},
           };
           loadedContent = await fetchWebBookContent(url);
           if (!loadedContent) {
             throw new Error("Could not extract readable text from the web page.");
           }
-        } else {
-          parsedBook = {
+        } else if (source === 'gutendex' && id) {
+          const gutendexBook: MappedGutenbergBook = {
             id: id,
             title: title,
-            source: source as 'gutendex',
+            source: 'gutendex',
             authors: searchParams.get('authors') || 'Unknown',
             formats: JSON.parse(searchParams.get('formats') || '{}'),
           };
-          loadedContent = await fetchBookContent(parsedBook);
+          parsedBook = gutendexBook;
+          loadedContent = await fetchBookContent(gutendexBook);
+        } else {
+          setError(`Unsupported or incomplete source information provided: source=${source}`);
+          setIsLoading(false);
+          return;
         }
 
         setBook(parsedBook);
