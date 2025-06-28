@@ -1,2 +1,3 @@
-// This component has been replaced by the /legal page and is no longer in use.
+// This component is deprecated and no longer in use.
+// It has been replaced by the dedicated page at /legal.
 export {};

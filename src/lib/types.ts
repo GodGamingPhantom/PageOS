@@ -1,3 +1,3 @@
-// This file contained types for an old, unused feature and has been disabled to prevent routing errors.
-// Its contents have been removed.
+// This file is deprecated and no longer in use.
+// Types for legacy features have been removed or relocated.
 export {};
