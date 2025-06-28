@@ -33,7 +33,8 @@ export async function GET(req: NextRequest) {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    const rawLinks = $('a[href^="http"]').map((i, el) => {
+    // Use a more specific selector to target the main result links
+    const rawLinks = $('div#results a.result-link').map((i, el) => {
         return {
             title: $(el).text().trim(),
             href: $(el).attr('href'),
