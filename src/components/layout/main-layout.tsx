@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./sidebar";
 import { AppHeader } from "./header";
@@ -10,6 +11,7 @@ import { Bootloader } from "@/components/bootloader";
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { showBootAnimation } = useReaderSettings();
   const [isBooting, setIsBooting] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     try {
@@ -36,6 +38,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   
   if (isBooting) {
     return <Bootloader onComplete={handleBootComplete} />;
+  }
+
+  // If we are on the reader page, just render the children directly for a fullscreen experience.
+  // This makes the reader independent of the main app's layout.
+  if (pathname.startsWith('/read')) {
+    return <>{children}</>;
   }
 
   return (
