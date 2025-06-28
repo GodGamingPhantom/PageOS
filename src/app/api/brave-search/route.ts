@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
         // Using a standard browser User-Agent to avoid being blocked.
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept-Language': 'en-US,en;q=0.9',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       },
        signal: AbortSignal.timeout(10000) // 10-second timeout
     });
@@ -33,24 +34,33 @@ export async function GET(req: NextRequest) {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // Use a more specific selector to target the main result links
-    const rawLinks = $('div#results a.result-link').map((i, el) => {
+    // Use a more generic selector and rely on filtering to find valid links.
+    // This can be more robust if specific class names change frequently.
+    const rawLinks = $('a[href]').map((i, el) => {
         return {
-            title: $(el).text().trim(),
+            // Find a reasonable title. Look for an h2 inside or get the text.
+            title: $(el).find('h2').text().trim() || $(el).text().trim(),
             href: $(el).attr('href'),
         };
     }).get();
-
-    const results = rawLinks.filter(link => 
-        link.href && (/\.(pdf|txt)$/i.test(link.href))
-    ).map(link => ({
-        title: link.title,
-        link: link.href!,
-        type: link.href!.toLowerCase().endsWith('.pdf') ? 'pdf' : 'txt',
-    }));
+    
+    const results = rawLinks
+      .filter(link => 
+          link.href && 
+          link.title &&
+          /\.(pdf|txt)$/i.test(link.href)
+      )
+      .map(link => ({
+          title: link.title,
+          link: link.href!,
+          type: link.href!.toLowerCase().endsWith('.pdf') ? 'pdf' : 'txt',
+      }));
+    
+    // Deduplicate results based on the link
+    const uniqueResults = Array.from(new Map(results.map(item => [item.link, item])).values());
     
     // Return the first 5 valid results.
-    return NextResponse.json(results.slice(0, 5));
+    return NextResponse.json(uniqueResults.slice(0, 5));
 
   } catch(error) {
     console.error("[Brave Search] An error occurred in the search route:", error);

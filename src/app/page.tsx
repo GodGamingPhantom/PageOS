@@ -54,7 +54,20 @@ export default function HomePage() {
     setHasSearched(true);
 
     try {
-      const webSearchPromise = fetch(`/api/brave-search?q=${encodeURIComponent(query)}`).then(res => res.json());
+      const webSearchPromise = fetch(`/api/brave-search?q=${encodeURIComponent(query)}`)
+        .then(async res => {
+          if (!res.ok) {
+            console.error('Web search API returned an error:', res.status, await res.text());
+            return [];
+          }
+          const json = await res.json();
+          console.log('Web fallback results:', json); // As requested for debugging
+          return json;
+        }).catch(err => {
+          console.error('Web search fetch failed:', err);
+          return [];
+        });
+
       const gutenbergPromise = fetchGutenbergBooks(query);
 
       const [webData, gutenbergData] = await Promise.allSettled([webSearchPromise, gutenbergPromise]);
@@ -175,7 +188,7 @@ export default function HomePage() {
         <h1 className="text-3xl font-headline text-accent">SYSTEM_FEED</h1>
         <p className="text-muted-foreground">
           Search for transmissions and memory logs across the network.
-        </p>
+        p>
       </div>
 
       <CommandSearch onSearch={handleSearch} />
