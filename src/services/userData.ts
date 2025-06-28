@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
 import type { SearchResult } from '@/adapters/sourceManager';
