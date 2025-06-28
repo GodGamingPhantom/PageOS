@@ -1,6 +1,7 @@
 
 import * as gutendex from './gutendex';
 import type { MappedGutenbergBook } from './gutendex';
+export type { MappedGutenbergBook } from './gutendex';
 
 // Represents a book from a generic web URL
 export type WebBook = {
