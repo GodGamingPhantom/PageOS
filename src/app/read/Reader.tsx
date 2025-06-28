@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -110,7 +109,7 @@ export default function Reader() {
       </header>
 
       {/* Reader Body */}
-      <main className="relative flex-1 overflow-auto">
+      <main className="relative flex-1 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none bg-scanner bg-repeat animate-scanner z-0" />
         <div className="relative w-full h-full z-10 overflow-x-hidden">
           <AnimatePresence initial={false} custom={direction}>
@@ -127,7 +126,7 @@ export default function Reader() {
               }}
               className="absolute inset-0 w-full h-full overflow-hidden"
             >
-              <div className="w-full max-w-5xl mx-auto h-full flex flex-col justify-between p-4 sm:p-6 pt-12 pb-24 bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
+              <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 pt-12 pb-24 bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
 
                 <div className="w-full flex-1 flex flex-col justify-between">
                   <div>
