@@ -126,8 +126,8 @@ export default function Reader() {
               }}
               className="absolute inset-0"
             >
-              <div className="h-full w-full max-w-full flex flex-col pt-12 pb-24 bg-card/80 backdrop-blur-sm rounded-lg shadow-accent-glow ring-1 ring-accent/20 overflow-y-auto">
-                <div className="w-full max-w-5xl mx-auto px-4 sm:px-8 flex-1 flex flex-col justify-between">
+              <div className="h-full w-full max-w-full flex flex-col pt-12 pb-24 bg-card/80 backdrop-blur-sm rounded-lg shadow-accent-glow ring-1 ring-accent/20 overflow-y-auto overflow-x-auto">
+                <div className="w-full max-w-full mx-auto px-4 sm:px-8 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="font-headline text-xs text-accent/80 mb-4">
                       ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
