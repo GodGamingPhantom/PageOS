@@ -123,17 +123,19 @@ export default function Reader() {
               }}
               className="absolute inset-0 w-full h-full overflow-hidden"
             >
-              <div className="h-full w-full flex justify-center overflow-y-auto">
-                <div className="w-full max-w-[900px] min-h-[100%] px-4 sm:px-6 pt-12 pb-[30vh] bg-card/80 backdrop-blur-sm ring-1 ring-accent/20 shadow-[0_0_40px_#00ffc855]">
-                  <div className="font-headline text-xs text-accent/80 mb-4">
-                    ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+              <div className="h-full w-full overflow-y-auto">
+                <div className="w-full min-h-[100%] flex flex-col justify-between p-4 sm:p-6 pt-12 pb-[30vh] bg-card/80 backdrop-blur-sm ring-1 ring-accent/20 shadow-[0_0_40px_#00ffc855]">
+                  <div>
+                    <div className="font-headline text-xs text-accent/80 mb-4">
+                      ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
+                    </div>
+                    <div className="space-y-4 font-reader text-base leading-relaxed text-foreground">
+                      {currentSector?.map((p, i) => (
+                        <p key={i}>{p.trim()}</p>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-4 font-reader text-base leading-relaxed text-foreground">
-                    {currentSector?.map((p, i) => (
-                      <p key={i}>{p.trim()}</p>
-                    ))}
-                  </div>
-                  <div className="mt-8 mb-12 text-[10px] text-muted-foreground/60">
+                  <div className="mt-8 text-[10px] text-muted-foreground/60">
                     MEM.STREAM ▍ DECODING {(100 * (activeSector + 1) / (sectors.length || 1)).toFixed(1)}%
                   </div>
                 </div>
