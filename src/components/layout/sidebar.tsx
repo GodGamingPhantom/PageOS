@@ -18,6 +18,7 @@ import {
   User,
   Power,
   LogIn,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "firebase/auth";
@@ -29,6 +30,7 @@ const menuItems = [
   { href: "/library", label: "Archive", icon: Library },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/legal", label: "Legal", icon: Shield },
 ];
 
 export function AppSidebar() {
