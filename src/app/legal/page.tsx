@@ -2,6 +2,8 @@
 'use client';
 
 import { Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const legalLines = [
   'PAGE.OS is a decentralized interface for exploring publicly available web texts.',
@@ -30,6 +32,12 @@ export default function LegalPage() {
                         {line}
                         </p>
                     ))}
+                    <div className="pt-6 border-t border-border/20 mt-6">
+                        <p className="font-medium text-foreground/90 mb-2">For copyright-related inquiries, please see our DMCA Policy.</p>
+                        <Button asChild variant="outline" className="border-accent/50 text-accent hover:bg-accent/10 hover:text-accent">
+                            <Link href="/legal/dmca">View DMCA Policy</Link>
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
