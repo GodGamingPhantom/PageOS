@@ -15,8 +15,6 @@ import useBookLoader from '@/hooks/useBookLoader';
 import useBookmark from '@/hooks/useBookmark';
 import { useAuth } from '@/context/auth-provider';
 
-const HEADER_HEIGHT = 41;
-
 export default function Reader() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -60,14 +58,14 @@ export default function Reader() {
   };
 
   if (isLoading) return (
-    <div className="h-[calc(100vh-41px)] flex items-center justify-center flex-col text-muted-foreground">
+    <div className="h-screen flex items-center justify-center flex-col text-muted-foreground">
       <LoaderCircle className="animate-spin h-6 w-6 text-accent" />
       <p className="mt-2">Rendering Transmission...</p>
     </div>
   );
 
   if (error) return (
-    <div className="h-[calc(100vh-41px)] flex items-center justify-center flex-col text-destructive">
+    <div className="h-screen flex items-center justify-center flex-col text-destructive">
       <AlertTriangle className="h-8 w-8" />
       <p className="font-headline mt-2">TRANSMISSION_ERROR</p>
       <p className="text-xs text-muted-foreground max-w-md text-center">{error}</p>
@@ -75,10 +73,10 @@ export default function Reader() {
   );
 
   return (
-    <div className="h-[calc(100vh-41px)] flex flex-col overflow-hidden bg-background">
+    <div className="flex-1 flex flex-col overflow-hidden bg-background">
 
       {/* Header */}
-      <header className="h-[41px] flex items-center justify-between px-2 border-b border-border/40 text-xs text-muted-foreground">
+      <header className="h-[41px] flex-shrink-0 flex items-center justify-between px-2 border-b border-border/40 text-xs text-muted-foreground">
         <div className="flex items-center gap-2 truncate">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
@@ -107,11 +105,10 @@ export default function Reader() {
           </Button>
         </div>
       </header>
-
-      {/* Reader Body */}
+      
       <main className="relative flex-1 overflow-hidden w-full">
         <div className="absolute inset-0 pointer-events-none bg-scanner bg-repeat animate-scanner z-0" />
-        <div className="relative w-full h-full z-10 overflow-hidden">
+        <div className="relative h-full w-full z-10">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={activeSector}
@@ -126,19 +123,17 @@ export default function Reader() {
               }}
               className="absolute inset-0 w-full h-full overflow-hidden"
             >
-              <div className="h-full w-full overflow-y-auto">
-                <div className="w-full min-h-full flex flex-col p-4 sm:p-6 pt-12 bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
-                  <div className="flex-1">
-                    <div className="font-headline text-xs text-accent/80 mb-4">
-                      ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-                    </div>
-                    <div className="space-y-4 font-reader text-base leading-relaxed text-foreground">
-                      {currentSector?.map((p, i) => (
-                        <p key={i}>{p.trim()}</p>
-                      ))}
-                    </div>
+              <div className="h-full w-full flex justify-center overflow-y-auto">
+                <div className="w-full max-w-[900px] min-h-[100%] px-4 sm:px-6 pt-12 pb-[30vh] bg-card/80 backdrop-blur-sm ring-1 ring-accent/20 shadow-[0_0_40px_#00ffc855]">
+                  <div className="font-headline text-xs text-accent/80 mb-4">
+                    ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
                   </div>
-                  <div className="mt-8 mb-24 text-[10px] text-muted-foreground/60">
+                  <div className="space-y-4 font-reader text-base leading-relaxed text-foreground">
+                    {currentSector?.map((p, i) => (
+                      <p key={i}>{p.trim()}</p>
+                    ))}
+                  </div>
+                  <div className="mt-8 mb-12 text-[10px] text-muted-foreground/60">
                     MEM.STREAM ▍ DECODING {(100 * (activeSector + 1) / (sectors.length || 1)).toFixed(1)}%
                   </div>
                 </div>

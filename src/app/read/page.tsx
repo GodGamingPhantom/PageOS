@@ -15,8 +15,10 @@ function ReaderFallback() {
 
 export default function ReaderPage() {
   return (
-    <Suspense fallback={<ReaderFallback />}>
-      <Reader />
-    </Suspense>
+    <div className="w-full h-screen overflow-hidden flex flex-col bg-background">
+      <Suspense fallback={<ReaderFallback />}>
+        <Reader />
+      </Suspense>
+    </div>
   );
 }
