@@ -8,7 +8,7 @@ const bootSequence = [
   { text: "[ INITIATING BOOTLOADER ]", delay: 100 },
   { text: "> PAGEOS v1.0 — TERMINAL READER ENVIRONMENT", delay: 500 },
   { text: "> MEMLINK PROTOCOL: ACTIVE", delay: 300 },
-  { text: "> LINKING NODE(S): GUTENDEX | STD_EBOOKS | OPENLIB |", delay: 300, isAccent: true },
+  { text: "> LINKING NODE(S): GUTENDEX", delay: 300, isAccent: true },
   { text: "> MEMORY STREAM STATUS: ONLINE", delay: 300 },
   { text: "> DECODER ENGINE: READY", delay: 300, isAccent: true },
   { text: "progress", delay: 100 },

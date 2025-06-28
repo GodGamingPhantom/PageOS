@@ -13,12 +13,6 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'covers.openlibrary.org',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'www.gutenberg.org',
         port: '',
         pathname: '/**',
