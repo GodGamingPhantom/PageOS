@@ -188,7 +188,7 @@ export default function HomePage() {
         <h1 className="text-3xl font-headline text-accent">SYSTEM_FEED</h1>
         <p className="text-muted-foreground">
           Search for transmissions and memory logs across the network.
-        p>
+        </p>
       </div>
 
       <CommandSearch onSearch={handleSearch} />
