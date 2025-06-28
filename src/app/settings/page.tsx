@@ -192,7 +192,7 @@ export default function SettingsPage() {
                  </div>
               ))}
               <div className="pt-4">
-                <Label htmlFor="add-source" className="text-accent/80">> IMPORT FROM NODE URL</Label>
+                <Label htmlFor="add-source" className="text-accent/80">IMPORT FROM NODE URL</Label>
                 <div className="flex items-center gap-2 mt-2">
                     <Input 
                       id="add-source" 
