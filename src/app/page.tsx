@@ -61,7 +61,8 @@ export default function HomePage() {
             return [];
           }
           const json = await res.json();
-          console.log('Web fallback results:', json); // As requested for debugging
+          // As requested for debugging
+          console.log('🛰️ Web Results:', json); 
           return json;
         }).catch(err => {
           console.error('Web search fetch failed:', err);

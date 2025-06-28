@@ -40,35 +40,44 @@ export function WebFallbackResults({ results }: { results: WebFallbackResult[] }
           <ul className="space-y-4">
             {results.map((result, index) => {
               const isTxt = result.type === 'txt';
-              const Wrapper = isTxt ? Link : 'a';
-              const href = isTxt
-                ? `/read?source=web&url=${encodeURIComponent(result.link)}&title=${encodeURIComponent(result.title)}`
-                : result.link;
-              
-              const linkProps = isTxt
-                ? {}
-                : { target: '_blank', rel: 'noopener noreferrer' };
+              const commonContent = (
+                <div className="flex items-start gap-4">
+                  <FiletypeIcon type={result.type} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-foreground group-hover:text-accent group-hover:underline">
+                        {result.title || 'Untitled'}
+                      </p>
+                      <Badge variant="outline" className="border-accent/50 text-accent/80 text-xs">
+                        {result.type.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground/70 mt-2 truncate group-hover:text-accent/80">
+                      {result.link}
+                    </p>
+                  </div>
+                </div>
+              );
 
               return (
                 <li key={index} className="rounded-md border border-border/30 p-4 transition-colors hover:bg-input/50">
-                  <Wrapper href={href} {...linkProps} className="group">
-                    <div className="flex items-start gap-4">
-                      <FiletypeIcon type={result.type} />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-foreground group-hover:text-accent group-hover:underline">
-                            {result.title || 'Untitled'}
-                          </p>
-                          <Badge variant="outline" className="border-accent/50 text-accent/80 text-xs">
-                            {result.type.toUpperCase()}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground/70 mt-2 truncate group-hover:text-accent/80">
-                          {result.link}
-                        </p>
-                      </div>
-                    </div>
-                  </Wrapper>
+                  {isTxt ? (
+                    <Link 
+                      href={`/read?source=web&url=${encodeURIComponent(result.link)}&title=${encodeURIComponent(result.title)}`}
+                      className="group"
+                    >
+                      {commonContent}
+                    </Link>
+                  ) : (
+                    <a 
+                      href={result.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="group"
+                    >
+                      {commonContent}
+                    </a>
+                  )}
                 </li>
               );
             })}

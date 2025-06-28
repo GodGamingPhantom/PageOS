@@ -9,7 +9,6 @@ import { getLibraryBook } from '@/services/userData';
 import { useAuth } from '@/context/auth-provider';
 import { generateBookId } from '@/services/userData';
 
-
 export default function useBookLoader(searchParams: URLSearchParams) {
   const { user } = useAuth();
   const [book, setBook] = useState<SearchResult | null>(null);
@@ -30,14 +29,14 @@ export default function useBookLoader(searchParams: URLSearchParams) {
       const url = searchParams.get('url');
 
       if (!source || !title) {
-        setError('Essential book information (source, title) is missing from the request.');
+        setError('Missing required book metadata.');
         setIsLoading(false);
         return;
       }
 
       try {
-        let loadedContent: string | Blob | null = null;
         let parsedBook: SearchResult;
+        let loadedContent: string | Blob | null = null;
 
         if (source === 'web' && url) {
           parsedBook = {
@@ -49,23 +48,25 @@ export default function useBookLoader(searchParams: URLSearchParams) {
             formats: {},
           };
           loadedContent = await fetchWebBookContent(url);
-          if (!loadedContent) {
-            throw new Error("Could not extract readable text from the web page.");
-          }
-        } else if (source === 'gutendex' && id) {
-          const gutendexBook: MappedGutenbergBook = {
+          if (!loadedContent) throw new Error("No readable content extracted from .txt file");
+        } 
+        
+        else if (source === 'gutendex' && id) {
+          const formatsString = searchParams.get('formats');
+          if (!formatsString) throw new Error("Gutenberg book is missing 'formats' data.");
+          
+          parsedBook = {
             id: id,
             title: title,
             source: 'gutendex',
             authors: searchParams.get('authors') || 'Unknown',
-            formats: JSON.parse(searchParams.get('formats') || '{}'),
+            formats: JSON.parse(formatsString),
           };
-          parsedBook = gutendexBook;
-          loadedContent = await fetchBookContent(gutendexBook);
-        } else {
-          setError(`Unsupported or incomplete source information provided: source=${source}`);
-          setIsLoading(false);
-          return;
+          loadedContent = await fetchBookContent(parsedBook as MappedGutenbergBook);
+        } 
+        
+        else {
+          throw new Error(`Unsupported book source: ${source}`);
         }
 
         setBook(parsedBook);
@@ -74,15 +75,14 @@ export default function useBookLoader(searchParams: URLSearchParams) {
         if (user && parsedBook) {
           const bookId = generateBookId(parsedBook);
           const libraryBook = await getLibraryBook(user.uid, bookId);
-          if (libraryBook && typeof libraryBook.lastReadSector === 'number') {
-             setActiveSector(libraryBook.lastReadSector);
+          if (libraryBook?.lastReadSector !== undefined) {
+            setActiveSector(libraryBook.lastReadSector);
           }
         }
 
       } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred while loading the book.';
-        setError(errorMessage);
         console.error("Book loading error:", e);
+        setError(e instanceof Error ? e.message : 'Unknown book load error.');
       } finally {
         setIsLoading(false);
       }
@@ -90,7 +90,7 @@ export default function useBookLoader(searchParams: URLSearchParams) {
 
     loadBookData();
   }, [searchParams, user]);
-  
+
   const { sectors, toc } = useMemo(() => {
     if (!content) return { sectors: [], toc: [] };
 
@@ -99,25 +99,20 @@ export default function useBookLoader(searchParams: URLSearchParams) {
     const toc: { title: string; sectorIndex: number }[] = [];
     const SECTOR_SIZE = 4;
 
-    const chapterRegex = /^(chapter|part)\s+[\divxclmk]+\.?/i;
-    const allCapsTitle = /^[A-Z][A-Z\s]{5,}[A-Z]$/;
+    const chapterRegex = /^(chapter|part|section)\s+[\divxclmk]+\.?/i;
+    const allCaps = /^[A-Z\s]{6,}$/;
 
     for (let i = 0; i < paragraphs.length; i += SECTOR_SIZE) {
-      const sectorContent = paragraphs.slice(i, i + SECTOR_SIZE);
-      const sectorIndex = sectors.length;
-      const heading = sectorContent.find(p => chapterRegex.test(p.trim()) || allCapsTitle.test(p.trim()));
-      
-      if (heading) {
-        toc.push({ title: heading.trim(), sectorIndex: sectorIndex });
-      }
-
-      sectors.push(sectorContent);
+      const chunk = paragraphs.slice(i, i + SECTOR_SIZE);
+      const heading = chunk.find(p => chapterRegex.test(p) || allCaps.test(p));
+      if (heading) toc.push({ title: heading.trim(), sectorIndex: sectors.length });
+      sectors.push(chunk);
     }
-    
-    if(toc.length === 0 && sectors.length > 10) {
-        for(let i = 0; i < sectors.length; i += 10) {
-            toc.push({title: `Sector ${i+1}`, sectorIndex: i});
-        }
+
+    if (toc.length === 0 && sectors.length > 10) {
+      for (let i = 0; i < sectors.length; i += 10) {
+        toc.push({ title: `Sector ${i + 1}`, sectorIndex: i });
+      }
     }
 
     return { sectors, toc };
