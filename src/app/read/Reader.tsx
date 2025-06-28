@@ -127,21 +127,19 @@ export default function Reader() {
               className="absolute inset-0 w-full h-full overflow-hidden"
             >
               <div className="h-full w-full overflow-y-auto">
-                <div className="w-full min-h-[100%] flex flex-col justify-between p-4 sm:p-6 pt-12 pb-[30vh] bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
-                  <div className="w-full flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="font-headline text-xs text-accent/80 mb-4">
-                        ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
-                      </div>
-                      <div className="space-y-4 font-reader text-base leading-relaxed text-foreground">
-                        {currentSector?.map((p, i) => (
-                          <p key={i}>{p.trim()}</p>
-                        ))}
-                      </div>
+                <div className="w-full min-h-full flex flex-col p-4 sm:p-6 pt-12 bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
+                  <div className="flex-1">
+                    <div className="font-headline text-xs text-accent/80 mb-4">
+                      ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
                     </div>
-                    <div className="mt-8 text-[10px] text-muted-foreground/60">
-                      MEM.STREAM ▍ DECODING {(100 * (activeSector + 1) / (sectors.length || 1)).toFixed(1)}%
+                    <div className="space-y-4 font-reader text-base leading-relaxed text-foreground">
+                      {currentSector?.map((p, i) => (
+                        <p key={i}>{p.trim()}</p>
+                      ))}
                     </div>
+                  </div>
+                  <div className="mt-8 mb-24 text-[10px] text-muted-foreground/60">
+                    MEM.STREAM ▍ DECODING {(100 * (activeSector + 1) / (sectors.length || 1)).toFixed(1)}%
                   </div>
                 </div>
               </div>
