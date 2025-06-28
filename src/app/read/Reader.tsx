@@ -109,9 +109,9 @@ export default function Reader() {
       </header>
 
       {/* Reader Body */}
-      <main className="relative flex-1 overflow-hidden">
+      <main className="relative flex-1 overflow-hidden w-full">
         <div className="absolute inset-0 pointer-events-none bg-scanner bg-repeat animate-scanner z-0" />
-        <div className="relative w-full h-full z-10 overflow-x-hidden">
+        <div className="relative w-full h-full z-10 overflow-hidden">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={activeSector}
@@ -127,8 +127,7 @@ export default function Reader() {
               className="absolute inset-0 w-full h-full overflow-hidden"
             >
               <div className="h-full w-full overflow-y-auto">
-                <div className="w-full min-h-full flex flex-col justify-between p-4 sm:p-6 pt-12 pb-64 bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
-
+                <div className="w-full min-h-[100%] flex flex-col justify-between p-4 sm:p-6 pt-12 pb-[30vh] bg-card/80 backdrop-blur-sm shadow-[0_0_40px_#00ffc855] ring-1 ring-accent/20 text-foreground">
                   <div className="w-full flex-1 flex flex-col justify-between">
                     <div>
                       <div className="font-headline text-xs text-accent/80 mb-4">
@@ -144,7 +143,6 @@ export default function Reader() {
                       MEM.STREAM ▍ DECODING {(100 * (activeSector + 1) / (sectors.length || 1)).toFixed(1)}%
                     </div>
                   </div>
-
                 </div>
               </div>
             </motion.div>
