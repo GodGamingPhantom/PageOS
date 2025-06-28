@@ -15,6 +15,8 @@ import useBookLoader from '@/hooks/useBookLoader';
 import useBookmark from '@/hooks/useBookmark';
 import { useAuth } from '@/context/auth-provider';
 
+const HEADER_HEIGHT = 41;
+
 export default function Reader() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -73,16 +75,16 @@ export default function Reader() {
   );
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-41px)] flex flex-col overflow-hidden">
 
       {/* Header */}
-      <header className="h-[41px] flex items-center justify-between px-2 border-b border-border/40 text-xs text-muted-foreground shrink-0">
+      <header className="h-[41px] flex items-center justify-between px-2 border-b border-border/40 text-xs text-muted-foreground">
         <div className="flex items-center gap-2 truncate">
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <span className="truncate">
-            {book?.source?.toUpperCase()} ▍ID_{book?.id.slice(-20)}
+            {book?.source.toUpperCase()} ▍ID_{book?.id.slice(-20)}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -95,7 +97,6 @@ export default function Reader() {
             variant="ghost" size="icon"
             onClick={toggleBookmark}
             disabled={isBookmarkLoading || !user || isWebBook}
-            title={isWebBook ? 'Cannot bookmark web results' : 'Bookmark this transmission'}
           >
             {isBookmarkLoading
               ? <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -123,9 +124,9 @@ export default function Reader() {
                 x: { type: 'spring', stiffness: 220, damping: 30 },
                 opacity: { duration: 0.2 }
               }}
-              className="absolute inset-0 p-4"
+              className="absolute inset-0"
             >
-              <div className="h-full w-full max-w-full px-4 sm:px-8 flex flex-col justify-between pt-12 pb-24 bg-card/80 backdrop-blur-sm rounded-lg shadow-accent-glow ring-1 ring-accent/20">
+              <div className="h-full w-full max-w-full px-4 sm:px-8 flex flex-col justify-between pt-12 pb-24 bg-card/80 backdrop-blur-sm rounded-lg shadow-accent-glow ring-1 ring-accent/20 overflow-y-auto">
                 <div>
                   <div className="font-headline text-xs text-accent/80 mb-4">
                     ▶ SECTOR {String(activeSector + 1).padStart(4, '0')} ▍
