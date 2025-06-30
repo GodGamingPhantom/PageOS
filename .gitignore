@@ -1,8 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
+# ──────────────🔁 Dependency Management ──────────────
+node_modules/
+.pnp/
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,36 +10,38 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# ──────────────🧪 Testing ──────────────
+coverage/
 
-# next.js
-/.next/
-/out/
+# ──────────────⚙️ Build Outputs ──────────────
+.next/
+.turbo/
+out/
+build/
 
-# production
-/build
+# ──────────────📝 Environment Variables ──────────────
+.env*
+.env.local
 
-# misc
-.DS_Store
-*.pem
+# ──────────────🧱 Lockfiles ──────────────
+pnpm-lock.yaml
 
-# debug
+# ──────────────💥 Logs & Debug ──────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+firebase-debug.log
+firestore-debug.log
 
-# vercel
-.vercel
-
-# typescript
+# ──────────────📦 Misc ──────────────
+.DS_Store
+*.pem
 *.tsbuildinfo
 next-env.d.ts
 
-.genkit/*
-.env*
+# ──────────────☁️ Hosting / Platforms ──────────────
+.vercel
 
-# firebase
-firebase-debug.log
-firestore-debug.log
+# ──────────────🧪 Genkit (if used) ──────────────
+.genkit/
