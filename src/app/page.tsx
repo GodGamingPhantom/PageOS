@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -58,15 +57,15 @@ export default function HomePage() {
       const gutenbergPromise = fetchGutenbergBooks(query);
 
       const [webData, gutenbergData] = await Promise.allSettled([webSearchPromise, gutenbergPromise]);
-      
-      if (webData.status === 'fulfilled' && !webData.value.error) {
+
+      if (webData.status === "fulfilled" && !webData.value.error) {
         setWebResults(webData.value || []);
       } else {
-        console.error("Web search failed:", webData.status === 'rejected' ? webData.reason : webData.value.error);
+        console.error("Web search failed:", webData.status === "rejected" ? webData.reason : webData.value.error);
         setWebResults([]);
       }
-      
-      if (gutenbergData.status === 'fulfilled') {
+
+      if (gutenbergData.status === "fulfilled") {
         setPrimaryResults(gutenbergData.value || []);
       } else {
         console.error("Gutenberg search failed:", gutenbergData.reason);
@@ -81,25 +80,25 @@ export default function HomePage() {
       setIsLoading(false);
     }
   };
-  
+
   const renderPrimaryResults = () => {
     if (primaryResults.length === 0) {
-       return (
+      return (
         <Card className="border-border/50 bg-card text-center col-span-full">
-            <CardHeader>
-              <div className="mx-auto bg-input rounded-full p-3 w-fit">
-                <SignalZero className="h-8 w-8 text-accent" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardTitle className="font-headline text-lg text-accent/80">
-                NO_PRIMARY_RESULTS
-              </CardTitle>
-              <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                No data streams in the primary network match the provided signature.
-              </p>
-            </CardContent>
-          </Card>
+          <CardHeader>
+            <div className="mx-auto bg-input rounded-full p-3 w-fit">
+              <SignalZero className="h-8 w-8 text-accent" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <CardTitle className="font-headline text-lg text-accent/80">
+              NO_PRIMARY_RESULTS
+            </CardTitle>
+            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+              No data streams in the primary network match the provided signature.
+            </p>
+          </CardContent>
+        </Card>
       );
     }
     return (
@@ -113,7 +112,7 @@ export default function HomePage() {
       </>
     );
   };
-  
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -125,13 +124,14 @@ export default function HomePage() {
         </div>
       );
     }
-    
+
     if (hasSearched) {
-       return (
+      return (
         <>
           <section className="col-span-full">
             <h2 className="font-headline text-lg text-accent/80 mb-4 border-b border-dashed border-border pb-2">
-              // PRIMARY_ARCHIVE_RESULTS
+              {/* PRIMARY_ARCHIVE_RESULTS */}
+              PRIMARY_ARCHIVE_RESULTS
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {renderPrimaryResults()}
@@ -146,7 +146,8 @@ export default function HomePage() {
     return (
       <section className="col-span-full">
         <h2 className="font-headline text-lg text-accent/80 mb-4">
-          // FEATURED_LOGS from the Network
+          {/* FEATURED_LOGS from the Network */}
+          FEATURED_LOGS from the Network
         </h2>
         {isFeaturedLoading ? (
           <div className="flex justify-center items-center p-8">

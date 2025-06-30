@@ -1,16 +1,23 @@
-
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import type { SourceKey } from '@/adapters/sourceManager';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
 
-export type SourceSettings = Partial<Record<SourceKey, boolean>>;
+import type { Source } from "@/adapters/sourceManager";
+
+export type SourceSettings = Partial<Record<Source, boolean>>;
 
 type ReaderSettings = {
   autoScroll: boolean;
   setAutoScroll: (value: boolean) => void;
   sourceSettings: SourceSettings;
-  toggleSource: (sourceKey: SourceKey) => void;
+  toggleSource: (sourceKey: Source) => void;
   showBootAnimation: boolean;
   setShowBootAnimation: (value: boolean) => void;
 };
@@ -28,29 +35,32 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
 
   const handleSetAutoScroll = useCallback((value: boolean) => {
     try {
-      localStorage.setItem('pageos-autoscroll', JSON.stringify(value));
+      localStorage.setItem("pageos-autoscroll", JSON.stringify(value));
     } catch (error) {
       console.warn(`Error setting autoscroll in localStorage: ${error}`);
     }
     setAutoScroll(value);
   }, []);
-  
+
   const handleSetShowBootAnimation = useCallback((value: boolean) => {
     try {
-      localStorage.setItem('pageos-show-boot-animation', JSON.stringify(value));
+      localStorage.setItem("pageos-show-boot-animation", JSON.stringify(value));
     } catch (error) {
-      console.warn(`Error setting boot animation setting in localStorage: ${error}`);
+      console.warn(`Error setting boot animation in localStorage: ${error}`);
     }
     setShowBootAnimation(value);
   }, []);
 
-  const toggleSource = useCallback((sourceKey: SourceKey) => {
-    setSourceSettings(prev => {
-      const newSettings = { ...prev, [sourceKey]: !prev[sourceKey] };
+  const toggleSource = useCallback((sourceKey: Source) => {
+    setSourceSettings((prev: SourceSettings) => {
+      const newSettings: SourceSettings = {
+        ...prev,
+        [sourceKey]: !prev[sourceKey],
+      };
       try {
-        localStorage.setItem('pageos-source-settings', JSON.stringify(newSettings));
+        localStorage.setItem("pageos-source-settings", JSON.stringify(newSettings));
       } catch (error) {
-        console.warn(`Error setting source settings in localStorage: ${error}`);
+        console.warn(`Error saving source settings to localStorage: ${error}`);
       }
       return newSettings;
     });
@@ -58,31 +68,32 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const storedAutoScroll = localStorage.getItem('pageos-autoscroll');
-      if (storedAutoScroll) {
+      const storedAutoScroll = localStorage.getItem("pageos-autoscroll");
+      if (storedAutoScroll !== null) {
         setAutoScroll(JSON.parse(storedAutoScroll));
       }
-      const storedSources = localStorage.getItem('pageos-source-settings');
+
+      const storedSources = localStorage.getItem("pageos-source-settings");
       if (storedSources) {
-        // Merge with defaults to ensure new sources are included
         const parsed = JSON.parse(storedSources);
-        setSourceSettings(prev => ({ ...prev, ...parsed }));
+        setSourceSettings((prev: SourceSettings) => ({
+          ...prev,
+          ...parsed,
+        }));
       } else {
-        // If nothing is in localStorage, set the defaults
-        localStorage.setItem('pageos-source-settings', JSON.stringify(defaultSourceSettings));
-      }
-      const storedBootAnimation = localStorage.getItem('pageos-show-boot-animation');
-      if (storedBootAnimation !== null) {
-        setShowBootAnimation(JSON.parse(storedBootAnimation));
+        localStorage.setItem("pageos-source-settings", JSON.stringify(defaultSourceSettings));
       }
 
+      const storedBoot = localStorage.getItem("pageos-show-boot-animation");
+      if (storedBoot !== null) {
+        setShowBootAnimation(JSON.parse(storedBoot));
+      }
     } catch (error) {
-      console.warn(`Error reading settings from localStorage: ${error}`);
+      console.warn(`Error reading from localStorage: ${error}`);
     }
   }, []);
 
-
-  const value = {
+  const value: ReaderSettings = {
     autoScroll,
     setAutoScroll: handleSetAutoScroll,
     sourceSettings,
@@ -98,10 +109,10 @@ export function ReaderSettingsProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export const useReaderSettings = () => {
+export function useReaderSettings(): ReaderSettings {
   const context = useContext(ReaderSettingsContext);
-  if (context === undefined) {
-    throw new Error('useReaderSettings must be used within a ReaderSettingsProvider');
+  if (!context) {
+    throw new Error("useReaderSettings must be used within a ReaderSettingsProvider");
   }
   return context;
-};
+}

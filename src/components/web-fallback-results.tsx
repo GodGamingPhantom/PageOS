@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -13,21 +12,22 @@ export type WebFallbackResult = {
 };
 
 const FiletypeIcon = ({ type }: { type: 'pdf' | 'txt' }) => {
-    switch (type) {
-        case 'pdf': return <FileJson2 className="h-5 w-5 text-accent" />;
-        case 'txt': return <FileText className="h-5 w-5 text-accent" />;
-    }
-}
+  switch (type) {
+    case 'pdf':
+      return <FileJson2 className="h-5 w-5 text-accent" />;
+    case 'txt':
+      return <FileText className="h-5 w-5 text-accent" />;
+  }
+};
 
 export function WebFallbackResults({ results }: { results: WebFallbackResult[] }) {
-  if (results.length === 0) {
-    return null;
-  }
+  if (results.length === 0) return null;
 
   return (
     <section className="col-span-full">
       <h2 className="font-headline text-lg text-accent/80 mb-4 border-b border-dashed border-border pb-2">
-        // WEB_FALLBACK_RESULTS
+        {/* WEB_FALLBACK_RESULTS */}
+        WEB_FALLBACK_RESULTS
       </h2>
       <Card className="border-border/50 bg-card">
         <CardHeader>
@@ -44,7 +44,7 @@ export function WebFallbackResults({ results }: { results: WebFallbackResult[] }
               const href = isTxt
                 ? `/read?source=web&url=${encodeURIComponent(result.link)}&title=${encodeURIComponent(result.title)}`
                 : result.link;
-              
+
               const linkProps = isTxt
                 ? {}
                 : { target: '_blank', rel: 'noopener noreferrer' };
