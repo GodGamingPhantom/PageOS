@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import type { SearchResult } from "@/adapters/sourceManager";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -11,20 +10,15 @@ function createBookQuery(book: SearchResult): string {
   params.set("title", book.title);
   params.set("authors", book.authors);
 
-  switch (book.source) {
-    case "gutendex":
-      params.set("formats", JSON.stringify(book.formats));
-      break;
-    case "openLibrary":
-      params.set("edition", book.edition);
-      if (book.cover) {
-        params.set("cover", book.cover);
-      }
-      break;
-    case "standardEbooks":
-      params.set("slug", book.slug);
-      break;
+  if (book.source === "gutendex") {
+    params.set("formats", JSON.stringify(book.formats));
+  } else if (book.source === "web") {
+    if (book.url) params.set("url", book.url);
+    if (book.cover) params.set("cover", book.cover);
+  } else {
+    console.warn(`Unhandled book source: ${book.source}`);
   }
+
   return params.toString();
 }
 
@@ -50,7 +44,7 @@ export function SearchResultCard({ book }: { book: SearchResult & { progress?: n
           <p className="text-xs text-muted-foreground/80 w-full">
             <span className="text-accent">src:</span> {book.source}
           </p>
-           {book.progress !== undefined && book.progress > 0 && (
+          {book.progress !== undefined && book.progress > 0 && (
             <div className="w-full mt-2">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>PROGRESS</span>
