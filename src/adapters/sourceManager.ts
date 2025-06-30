@@ -1,35 +1,33 @@
-
-
 import * as gutendex from './gutendex';
 import type { MappedGutenbergBook } from './gutendex';
 
-export type SearchResult = MappedGutenbergBook;
+export type Source = "gutendex" | "web";
+
+export type SearchResult = {
+  id: string;
+  title: string;
+  authors: string;
+  source: Source;
+  formats?: Record<string, string>; // gutendex only
+  url?: string;                     // web only
+};
 
 /**
- * This file acts as a central hub for fetching book content from various sources.
- * Currently, it only supports Gutendex, but it's designed to be easily extendable.
- * For example, if you were to add another internal source like 'Standard Ebooks',
- * you would add a case for it in the fetchBookContent function.
- */
-
-
-/**
- * Fetches content from a primary source (currently only Gutendex).
- * This function determines which adapter to use based on the book's `source` property.
- * @param book The book object from a search result.
- * @returns A promise that resolves to the string content of the book.
+ * Fetches content from the book's source.
  */
 export async function fetchBookContent(book: SearchResult): Promise<string | Blob> {
-  // A switch statement would be used here if we had multiple primary sources.
-  // switch (book.source) {
-  //   case 'gutendex':
-  //     return await gutendex.fetchGutenbergBookContent(book.formats);
-  //   case 'anotherSource':
-  //     // return await anotherSource.fetchContent(book.details);
-  //   default:
-  //     throw new Error(`Unknown book source: ${book.source}`);
-  // }
-  
-  // Since we only have Gutendex as a primary source, we call its adapter directly.
-  return await gutendex.fetchGutenbergBookContent(book.formats);
+  switch (book.source) {
+    case "gutendex":
+      if (!book.formats) {
+        throw new Error("Missing formats for gutendex book");
+      }
+      return await gutendex.fetchGutenbergBookContent(book.formats);
+    case "web":
+      if (!book.url) throw new Error("Missing URL for web book");
+      const res = await fetch(book.url);
+      if (!res.ok) throw new Error("Failed to fetch web content");
+      return await res.blob();
+    default:
+      throw new Error(`Unknown book source: ${book.source}`);
+  }
 }

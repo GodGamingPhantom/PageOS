@@ -1,7 +1,20 @@
 import Link from "next/link";
-import type { SearchResult } from "@/adapters/sourceManager";
+import type { SearchResult as BaseSearchResult } from "@/adapters/sourceManager";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Progress } from "./ui/progress";
+
+// Define only the two sources we support
+type GutenBook = BaseSearchResult & {
+  source: "gutendex";
+  formats: Record<string, string>;
+};
+
+type WebBook = BaseSearchResult & {
+  source: "web";
+  url: string;
+};
+
+type SearchResult = GutenBook | WebBook;
 
 function createBookQuery(book: SearchResult): string {
   const params = new URLSearchParams();
@@ -10,13 +23,13 @@ function createBookQuery(book: SearchResult): string {
   params.set("title", book.title);
   params.set("authors", book.authors);
 
-  if (book.source === "gutendex") {
-    params.set("formats", JSON.stringify(book.formats));
-  } else if (book.source === "web") {
-    if (book.url) params.set("url", book.url);
-    if (book.cover) params.set("cover", book.cover);
-  } else {
-    console.warn(`Unhandled book source: ${book.source}`);
+  switch (book.source) {
+    case "gutendex":
+      params.set("formats", JSON.stringify(book.formats));
+      break;
+    case "web":
+      params.set("url", book.url);
+      break;
   }
 
   return params.toString();
@@ -37,7 +50,7 @@ export function SearchResultCard({ book }: { book: SearchResult & { progress?: n
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Author-</p>
-            <p className="font-medium text-foreground truncate">{book.authors || 'Unknown'}</p>
+            <p className="font-medium text-foreground truncate">{book.authors || "Unknown"}</p>
           </div>
         </CardContent>
         <CardFooter className="flex-col items-start p-4 pt-0">

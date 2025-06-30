@@ -15,8 +15,8 @@ export type MappedGutenbergBook = {
   id: string;
   title: string;
   authors: string;
+  source: "gutendex";
   formats: Record<string, string>;
-  source: 'gutendex';
 };
 
 /**
