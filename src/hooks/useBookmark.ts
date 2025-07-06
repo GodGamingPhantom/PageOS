@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -22,15 +21,17 @@ export default function useBookmark(
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
   const { toast } = useToast();
-  
+
+  // ✅ Correct logic: Only block bookmarking if source is "web"
   const isWebBook = book?.source === 'web';
   const bookId = book ? generateBookId(book) : null;
 
+  // ✅ Load bookmark state on mount
   useEffect(() => {
     if (!user || !bookId || isWebBook) {
-        setIsBookmarked(false);
-        return;
-    };
+      setIsBookmarked(false);
+      return;
+    }
 
     setIsBookmarkLoading(true);
     getLibraryBook(user.uid, bookId)
@@ -39,9 +40,9 @@ export default function useBookmark(
       })
       .catch(console.error)
       .finally(() => setIsBookmarkLoading(false));
-
   }, [user, bookId, isWebBook]);
-  
+
+  // ✅ Auto-sync reading progress if book is bookmarked
   useEffect(() => {
     if (!user || !bookId || !isBookmarked || sectors.length === 0) return;
 
@@ -56,6 +57,7 @@ export default function useBookmark(
     return () => clearTimeout(handler);
   }, [activeSector, sectors.length, user, bookId, isBookmarked]);
 
+  // ✅ Handles adding/removing bookmark with toast feedback
   const toggleBookmark = useCallback(async () => {
     if (!user || !book || !bookId || isWebBook) {
       toast({
@@ -65,7 +67,7 @@ export default function useBookmark(
       });
       return;
     }
-    
+
     setIsBookmarkLoading(true);
     try {
       if (isBookmarked) {

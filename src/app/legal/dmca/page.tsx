@@ -56,7 +56,7 @@ export default function DmcaPage() {
                         </p>
                         <p className="mt-4">Please send all takedown requests to:</p>
                         <p>
-                            <strong className="text-foreground/90">📧 Email:</strong> <a href="mailto:dmca@pageos.dev" className="text-accent hover:underline">dmca@pageos.dev</a>
+                            <strong className="text-foreground/90">📧 Email:</strong> <a href="mailto:pageos.help@gmail.com" className="text-accent hover:underline">pageos.help@gmail.com</a>
                         </p>
                     </section>
                     

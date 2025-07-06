@@ -3,7 +3,19 @@
 import * as gutendex from './gutendex';
 import type { MappedGutenbergBook } from './gutendex';
 
-export type SearchResult = MappedGutenbergBook;
+export type SourceKey = 'gutendex' | 'web';
+
+export type SearchResult =
+  | MappedGutenbergBook
+  | {
+      source: 'web';
+      id: string;
+      title: string;
+      authors: string;
+      formats?: {
+        web: string; // or any URL string
+      };
+    };
 
 /**
  * This file acts as a central hub for fetching book content from various sources.
@@ -31,5 +43,8 @@ export async function fetchBookContent(book: SearchResult): Promise<string | Blo
   // }
   
   // Since we only have Gutendex as a primary source, we call its adapter directly.
-  return await gutendex.fetchGutenbergBookContent(book.formats);
+  if (book.source === 'gutendex' && book.formats && typeof book.formats === 'object' && !('web' in book.formats)) {
+    return await gutendex.fetchGutenbergBookContent(book.formats as Record<string, string>);
+  }
+  throw new Error('Unsupported or missing formats for this book source.');
 }

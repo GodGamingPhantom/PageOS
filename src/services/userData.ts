@@ -12,7 +12,11 @@ export type LibraryBook = {
   savedAt: string;
   progress?: number; // Overall percentage
   lastReadSector?: number; // Index of last read "sector"
-} & SearchResult;
+  source: "gutendex" | "web";
+  title: string;
+  authors: string;
+  formats: Record<string, string>;
+};
 
 /**
  * Adds a book to the user's library (bookmarks).
@@ -28,6 +32,7 @@ export async function addBookToLibrary(userId: string, book: SearchResult): Prom
     savedAt: new Date().toISOString(),
     progress: 0,
     lastReadSector: 0,
+    formats: book.formats ?? {},
   };
   await setDoc(userLibraryRef, bookData);
 }

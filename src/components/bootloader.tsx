@@ -1,22 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useReaderSettings } from "@/context/reader-settings-provider";
 
+// === Boot Sequence ===
 const bootSequence = [
-  { text: "[ INITIATING BOOTLOADER ]", delay: 100 },
-  { text: "> PAGEOS v1.0 — TERMINAL READER ENVIRONMENT", delay: 500 },
-  { text: "> MEMLINK PROTOCOL: ACTIVE", delay: 300 },
-  { text: "> LINKING NODE(S): GUTENDEX | STD_EBOOKS | OPENLIB |", delay: 300, isAccent: true },
-  { text: "> MEMORY STREAM STATUS: ONLINE", delay: 300 },
-  { text: "> DECODER ENGINE: READY", delay: 300, isAccent: true },
+  { text: "[ INITIATING BOOTLOADER ]", delay: 80 },
+  { text: "> PAGEOS v1.0 — TERMINAL READER ENVIRONMENT", delay: 120 },
+  { text: "> Made with ❤️ by Celeron", delay: 100, isAccent: true },
+  { text: "> MEMLINK PROTOCOL: ACTIVE", delay: 200 },
+  { text: "> LINKING NODE(S): GUTENDEX | Web ", delay: 150, isAccent: true },
+  { text: "> MEMORY STREAM STATUS: ONLINE", delay: 150 },
+  { text: "> DECODER ENGINE: READY", delay: 200, isAccent: true },
   { text: "progress", delay: 100 },
-  { text: "> DECOMPRESSING SHELL ENVIRONMENT... OK", delay: 500 },
-  { text: "> SESSION ID: CELERON-ALPHA-001", delay: 300 },
-  { text: "> WELCOME TO PAGEOS", delay: 500, isAccent: true },
+  { text: "> DECOMPRESSING SHELL ENVIRONMENT... OK", delay: 180 },
+  { text: "> SESSION ID: Exploror-ALPHA-001", delay: 150 },
+  { text: "> WELCOME TO PAGEOS", delay: 300, isAccent: true },
 ];
 
+// === Progress Bar Line ===
 const ProgressBar = ({ onComplete }: { onComplete: () => void }) => {
   const [progress, setProgress] = useState(0);
 
@@ -26,43 +29,47 @@ const ProgressBar = ({ onComplete }: { onComplete: () => void }) => {
         const next = prev + Math.random() * 15;
         if (next >= 100) {
           clearInterval(interval);
-          setTimeout(onComplete, 500); // Give a moment to see 100%
+          setTimeout(onComplete, 500);
           return 100;
         }
         return next;
       });
     }, 120);
+
     return () => clearInterval(interval);
   }, [onComplete]);
 
-  const filledChars = Math.floor(progress / 10);
-  const emptyChars = 10 - filledChars;
+  const filled = Math.floor(progress / 10);
+  const empty = 10 - filled;
 
   return (
     <p>
       {`> RETRIEVING BOOK INDEX [`}
-      <span className="text-accent">{"▓".repeat(filledChars)}</span>
-      <span>{"░".repeat(emptyChars)}</span>
+      <span className="text-accent">{"▓".repeat(filled)}</span>
+      <span>{"░".repeat(empty)}</span>
       {`] ${Math.floor(progress)}%`}
     </p>
   );
 };
 
+// === Typewriter Effect ===
 const TypedLine = ({ text, onComplete }: { text: string; onComplete: () => void }) => {
-  const [typedText, setTypedText] = useState('');
+  const [typedText, setTypedText] = useState("");
 
   useEffect(() => {
-    setTypedText('');
-    const chars = text.split('');
-    const typingInterval = setInterval(() => {
-      if (chars.length > 0) {
-        setTypedText(prev => prev + chars.shift());
-      } else {
-        clearInterval(typingInterval);
-        onComplete();
-      }
+    const chars = [...text];
+    const interval = setInterval(() => {
+      setTypedText((prev) => {
+        if (chars.length === 0) {
+          clearInterval(interval);
+          onComplete();
+          return prev;
+        }
+        return prev + chars.shift();
+      });
     }, 30);
-    return () => clearInterval(typingInterval);
+
+    return () => clearInterval(interval);
   }, [text, onComplete]);
 
   return (
@@ -73,48 +80,59 @@ const TypedLine = ({ text, onComplete }: { text: string; onComplete: () => void 
   );
 };
 
+// === Bootloader Component ===
 export function Bootloader({ onComplete }: { onComplete: () => void }) {
-  const [sequenceIndex, setSequenceIndex] = useState(0);
-  const [lines, setLines] = useState<{ text: string, isAccent?: boolean, isTyping?: boolean, id: number }[]>([]);
   const { showBootAnimation } = useReaderSettings();
+  const [lines, setLines] = useState<
+    { text: string; isAccent?: boolean; isTyping?: boolean; id: number }[]
+  >([]);
+  const sequenceIndex = useRef(0);
+  const hasBootCompleted = useRef(false);
+  const hasStarted = useRef(false);
 
-  const handleSkip = useCallback(() => {
-    onComplete();
+  const runNextLine = useCallback(() => {
+    const index = sequenceIndex.current;
+    if (index >= bootSequence.length) {
+      // Finished all lines
+      setTimeout(() => {
+        if (!hasBootCompleted.current) {
+          hasBootCompleted.current = true;
+          onComplete();
+        }
+      }, 1000);
+      return;
+    }
+
+    const item = bootSequence[index];
+    sequenceIndex.current += 1;
+
+    setLines((prev) =>
+      prev.map((l) => ({ ...l, isTyping: false })).concat({
+        ...item,
+        isTyping: true,
+        id: Date.now(),
+      })
+    );
   }, [onComplete]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === "Escape" && handleSkip();
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSkip]);
-
+  // === Boot Sequence Starter ===
   useEffect(() => {
     if (!showBootAnimation) {
       onComplete();
       return;
     }
 
-    if (sequenceIndex >= bootSequence.length) {
-      setTimeout(onComplete, 1000);
-      return;
+    if (!hasStarted.current) {
+      hasStarted.current = true;
+      runNextLine();
     }
+  }, [showBootAnimation, runNextLine]);
 
-    const currentItem = bootSequence[sequenceIndex];
-    const timeoutId = setTimeout(() => {
-      setLines(prev => {
-        // remove typing flag from previous line
-        const updated = prev.map(l => ({ ...l, isTyping: false }));
-        // add new line with typing flag
-        return [...updated, { ...currentItem, isTyping: true, id: Date.now() }];
-      });
-    }, currentItem.delay);
-
-    return () => clearTimeout(timeoutId);
-  }, [sequenceIndex, showBootAnimation, onComplete]);
-
-
-  const handleLineComplete = () => {
-    setSequenceIndex(prev => prev + 1);
+  // === Skip on Click ===
+  const handleSkip = () => {
+    if (hasBootCompleted.current) return;
+    hasBootCompleted.current = true;
+    onComplete();
   };
 
   return (
@@ -129,12 +147,12 @@ export function Bootloader({ onComplete }: { onComplete: () => void }) {
         <div className="w-full max-w-3xl p-8">
           {lines.map(({ text, isAccent, isTyping, id }) => {
             if (text === "progress") {
-              return <ProgressBar key={id} onComplete={handleLineComplete} />;
+              return <ProgressBar key={id} onComplete={runNextLine} />;
             }
             return (
               <p key={id} className={isAccent ? "text-accent" : ""}>
                 {isTyping ? (
-                  <TypedLine text={text} onComplete={handleLineComplete} />
+                  <TypedLine text={text} onComplete={runNextLine} />
                 ) : (
                   text
                 )}

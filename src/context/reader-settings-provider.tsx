@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import type { SourceKey } from '@/adapters/sourceManager';
+type SourceKey = "gutendex" | "web";
 
 export type SourceSettings = Partial<Record<SourceKey, boolean>>;
 

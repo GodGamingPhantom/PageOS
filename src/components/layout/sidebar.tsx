@@ -1,16 +1,7 @@
-
 "use client";
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
 import {
   Home,
   Library,
@@ -46,52 +37,58 @@ export function AppSidebar() {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <SidebarHeader className="border-b border-border/50 p-2">
-        <div className="flex items-center justify-between p-2">
-            <Link href="/" className="font-headline text-2xl text-accent text-glow">
-              PageOS
-            </Link>
-          <div className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            v1.0
-          </div>
+    <div className="flex h-full flex-col font-mono text-sm text-terminal-foreground">
+      {/* Header */}
+      <div className="border-b border-terminal-border p-4">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="font-headline text-2xl text-terminal-accent glow">
+            PageOS
+          </Link>
+          <span className="text-xs text-muted">v1.0</span>
         </div>
-      </SidebarHeader>
+      </div>
 
-      <SidebarContent className="p-2">
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-                tooltip={{ children: item.label }}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
+      {/* Menu */}
+      <nav className="flex-1 p-4 space-y-2">
+        {menuItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-2 rounded-md px-3 py-2 transition-all ${
+                isActive
+                  ? "bg-terminal-accent/10 text-terminal-accent font-medium"
+                  : "hover:bg-terminal-border/10 hover:text-terminal-accent"
+              }`}
+            >
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
-      <SidebarFooter className="mt-auto border-t border-border/50 p-4">
+      {/* Footer */}
+      <div className="border-t border-terminal-border p-4">
         {user ? (
-            <Button variant="ghost" className="w-full justify-start gap-2 p-2" onClick={handleSignOut}>
-              <Power className="h-4 w-4 text-destructive" />
-              <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-            </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2"
+            onClick={handleSignOut}
+          >
+            <Power className="h-4 w-4 text-destructive" />
+            <span>Logout</span>
+          </Button>
         ) : (
-          <Button variant="ghost" asChild className="w-full justify-start gap-2 p-2">
+          <Button variant="ghost" asChild className="w-full justify-start gap-2">
             <Link href="/profile">
-              <LogIn className="h-4 w-4 text-accent" />
-              <span className="group-data-[collapsible=icon]:hidden">Login</span>
+              <LogIn className="h-4 w-4 text-terminal-accent" />
+              <span>Login</span>
             </Link>
           </Button>
         )}
-      </SidebarFooter>
+      </div>
     </div>
   );
 }

@@ -1,10 +1,11 @@
-
 "use client";
 
 import React from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { User, LogIn } from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "@/context/auth-provider";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,11 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { useAuth } from "@/context/auth-provider";
+
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+import {
+  User,
+  LogIn,
+} from "lucide-react";
 
 export function AppHeader() {
   const { user } = useAuth();
@@ -32,17 +36,19 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 px-4 backdrop-blur-sm md:px-6">
-      <SidebarTrigger className="md:hidden" />
-      <div className="flex-1">
-        {/* Placeholder for breadcrumbs or page title */}
-      </div>
+      {/* You can optionally place breadcrumbs or title here */}
+      <div className="flex-1" />
+
+      {/* 👤 User Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-accent/50">
             {user ? (
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
-                <AvatarFallback><User className="h-4 w-4 text-accent" /></AvatarFallback>
+                <AvatarImage src={user.photoURL || undefined} alt={user.displayName || "User"} />
+                <AvatarFallback>
+                  <User className="h-4 w-4 text-accent" />
+                </AvatarFallback>
               </Avatar>
             ) : (
               <User className="h-4 w-4 text-accent" />
@@ -53,7 +59,7 @@ export function AppHeader() {
         <DropdownMenuContent align="end" className="border-border/50 bg-background">
           {user ? (
             <>
-              <DropdownMenuLabel>{user.displayName || 'Operator'}</DropdownMenuLabel>
+              <DropdownMenuLabel>{user.displayName || "Operator"}</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-border/50" />
               <DropdownMenuItem asChild>
                 <Link href="/profile">Profile</Link>
@@ -62,10 +68,15 @@ export function AppHeader() {
                 <Link href="/settings">Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-border/50" />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:bg-destructive/20 focus:text-destructive">Logout</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                className="text-destructive focus:bg-destructive/20 focus:text-destructive"
+              >
+                Logout
+              </DropdownMenuItem>
             </>
           ) : (
-             <>
+            <>
               <DropdownMenuLabel>Guest Operator</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-border/50" />
               <DropdownMenuItem asChild>

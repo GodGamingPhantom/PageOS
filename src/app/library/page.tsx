@@ -78,9 +78,11 @@ export default function LibraryPage() {
     
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {libraryBooks.map((book) => (
-                <SearchResultCard key={`${book.source}-${book.id}`} book={book} />
-            ))}
+            {libraryBooks
+                .filter((book) => book.source === "gutendex" || book.source === "web")
+                .map((book) => (
+                    <SearchResultCard key={`${book.source}-${book.id}`} book={book as any} />
+                ))}
         </div>
     )
   };
